@@ -1,461 +1,286 @@
-// Modern English Text-to-Speech Application
-// Enhanced with better voice detection and modern features
-
+// Sinhala Text-to-Speech Application
 // Global variables
 let voices = [];
 let currentUtterance = null;
 let isPaused = false;
 let isSupported = false;
-let speechCount = 0;
-let totalCharsSpoken = 0;
-let voicesLoaded = false;
 
-// Enhanced sample texts
+// Sample texts
 const sampleTexts = {
-    sample1: 'Good morning! Have a wonderful day ahead.',
-    sample2: 'How are you today? I hope you are doing well.',
-    sample3: 'Thank you so much for using this application.',
-    sample4: 'Welcome to our modern text-to-speech application.',
-    sample5: 'Technology and science continue to change our lives in amazing ways. Computer technology allows us to connect and work together easily. This web application makes text-to-speech conversion simple and accessible for everyone.'
+    sample1: 'සුභ උදෑසනක්! ඔබට දිනයක් සුභපතනවා.',
+    sample2: 'ඔබට කෙසේද? ඔබේ සෞඛ්‍යය සම්පන්න ද?',
+    sample3: 'ස්තූතියි! ඔබේ සහයෝගයට ගොඩක් පිං.',
+    sample4: 'ශ්‍රී ලංකාව අපේ රට. අපේ මාතෘභූමිය ඉතාම ලස්සන.'
 };
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Initializing Modern English TTS...');
-    
-    // Force a delay to ensure DOM is fully loaded
-    setTimeout(() => {
-        checkBrowserSupport();
-        initializeTTS();
-        setupEventListeners();
-        updateStatistics();
-        
-        // Initialize Chrome workaround
-        initializeChromeWorkaround();
-        
-        // Initialize text input with default content
-        const textInput = document.getElementById('textInput');
-        if (textInput) {
-            textInput.dispatchEvent(new Event('input'));
-            console.log('📝 Text input initialized with default content');
-        } else {
-            console.error('❌ Text input not found during initialization');
-        }
-        
-        // Add a test button to the page for debugging
-        addDebugButton();
-        
-        // Apply initial styling to select dropdown
-        setTimeout(styleSelectOptions, 500);
-        
-        // Show help notifications
-        showInitialHelp();
-        
-        // Extra check to make sure voices are loaded
-        setTimeout(() => {
-            if (!voicesLoaded) {
-                console.log('⚠️ Voices not loaded yet. Trying again...');
-                initializeTTS();
-            }
-        }, 2000);
-        
-        console.log('🎯 Initialization complete');
-    }, 100);
+    initializeTTS();
+    setupEventListeners();
+    checkBrowserSupport();
 });
 
-// Enhanced browser support check
+// Check if browser supports Speech Synthesis
 function checkBrowserSupport() {
     if ('speechSynthesis' in window) {
         isSupported = true;
         console.log('✅ Speech Synthesis API is supported');
-        
-        // Check for enhanced features
-        const features = {
-            voicesChanged: 'onvoiceschanged' in speechSynthesis,
-            pause: 'pause' in speechSynthesis,
-            resume: 'resume' in speechSynthesis,
-            cancel: 'cancel' in speechSynthesis
-        };
-        
-        console.log('🔧 Available features:', features);
-        
     } else {
         isSupported = false;
         showStatus('error', 'Browser Not Supported', 
-                  'Your browser does not support Text-to-Speech. Please use Chrome, Edge, or Safari.');
+                  'Your browser does not support Text-to-Speech. Please try Google Chrome or Edge.');
         document.getElementById('speakBtn').disabled = true;
         console.log('❌ Speech Synthesis API is not supported');
     }
 }
 
-// Revolutionary voice loading system
+// Initialize Text-to-Speech functionality
 function initializeTTS() {
     if (!isSupported) return;
 
-    console.log('🔧 Starting enhanced voice loading...');
+    console.log('🚀 Initializing TTS...');
     
-    // Multi-strategy voice loading
-    const loadingStrategies = [
-        loadVoicesImmediate,
-        loadVoicesWithDelay,
-        loadVoicesWithUserInteraction,
-        loadVoicesWithPolling
-    ];
+    // Mobile device detection for special handling
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
-    // Try each strategy
-    loadingStrategies.forEach((strategy, index) => {
-        setTimeout(() => strategy(), index * 500);
-    });
+    // Immediate voice loading attempt
+    loadVoices();
     
-    // Set up voice change listener
-    if (speechSynthesis.onvoiceschanged !== undefined) {
+    // Force voice loading with multiple methods
+    function forceVoiceLoad() {
+        // Method 1: Create and cancel a dummy utterance
+        const dummyUtterance = new SpeechSynthesisUtterance(' ');
+        speechSynthesis.speak(dummyUtterance);
+        speechSynthesis.cancel();
+        
+        // Method 2: Set onvoiceschanged handler
         speechSynthesis.onvoiceschanged = () => {
             console.log('🔄 Voices changed event triggered');
-            setTimeout(loadVoices, 100);
+            loadVoices();
         };
+        
+        // Method 3: Check voices periodically
+        let voiceCheckCount = 0;
+        const voiceChecker = setInterval(() => {
+            const currentVoices = speechSynthesis.getVoices();
+            console.log(`🔍 Voice check ${voiceCheckCount + 1}: Found ${currentVoices.length} voices`);
+            
+            if (currentVoices.length > 0) {
+                loadVoices();
+                if (voiceCheckCount > 3) { // Stop after a few successful loads
+                    clearInterval(voiceChecker);
+                }
+            }
+            
+            voiceCheckCount++;
+            if (voiceCheckCount >= 20) { // Stop after 20 attempts (10 seconds)
+                clearInterval(voiceChecker);
+                if (currentVoices.length === 0) {
+                    console.log('❌ Failed to load voices after 20 attempts');
+                    showStatus('error', 'හඬ ලෝඩ් නොවිණි | Voice Loading Failed', 
+                              'Browser restart කර නැවත උත්සාහ කරන්න | Please restart your browser and try again.');
+                }
+            }
+        }, 500);
     }
     
-    // Final fallback after 5 seconds
-    setTimeout(() => {
-        if (!voicesLoaded) {
-            console.log('⏰ Final voice loading attempt');
-            loadVoices();
-        }
-    }, 5000);
-}
-
-// Strategy 1: Immediate loading
-function loadVoicesImmediate() {
-    console.log('📥 Strategy 1: Immediate voice loading');
-    loadVoices();
-}
-
-// Strategy 2: Delayed loading
-function loadVoicesWithDelay() {
-    console.log('📥 Strategy 2: Delayed voice loading');
-    setTimeout(loadVoices, 1000);
-}
-
-// Strategy 3: User interaction trigger
-function loadVoicesWithUserInteraction() {
-    console.log('📥 Strategy 3: User interaction voice loading');
-    
-    const triggerVoiceLoad = () => {
-        const utterance = new SpeechSynthesisUtterance(' ');
-        utterance.volume = 0;
-        speechSynthesis.speak(utterance);
-        speechSynthesis.cancel();
-        setTimeout(loadVoices, 100);
-    };
-    
-    // Trigger on first user interaction
-    document.addEventListener('click', triggerVoiceLoad, { once: true });
-    document.addEventListener('keydown', triggerVoiceLoad, { once: true });
-}
-
-// Strategy 4: Polling
-function loadVoicesWithPolling() {
-    console.log('📥 Strategy 4: Polling voice loading');
-    
-    let attempts = 0;
-    const maxAttempts = 20;
-    
-    const poll = setInterval(() => {
-        attempts++;
-        const currentVoices = speechSynthesis.getVoices();
+    if (isMobile) {
+        console.log('📱 Mobile device detected - using mobile-optimized voice loading');
         
-        if (currentVoices.length > 0) {
+        // Mobile browsers need delayed loading
+        setTimeout(() => {
+            forceVoiceLoad();
+            
+            // Android Chrome specific handling
+            if (navigator.userAgent.includes('Chrome') && navigator.userAgent.includes('Android')) {
+                // Additional attempts for Android Chrome
+                setTimeout(forceVoiceLoad, 1000);
+                setTimeout(forceVoiceLoad, 2000);
+            }
+        }, 1000);
+    } else {
+        // Desktop browsers
+        forceVoiceLoad();
+    }
+    
+    // Final attempt after page is fully loaded
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            console.log('🔄 Final voice loading attempt after page load');
             loadVoices();
-            if (attempts > 3) clearInterval(poll); // Stop after a few successful loads
-        }
-        
-        if (attempts >= maxAttempts) {
-            clearInterval(poll);
-            console.log('❌ Polling completed, voices may not be available');
-        }
-    }, 200);
+        }, 1000);
+    });
 }
 
-// Enhanced voice loading and filtering
+// Load and filter available voices
 function loadVoices() {
-    try {
-        const allVoices = speechSynthesis.getVoices();
-        
-        if (allVoices.length === 0) {
-            console.log('⏳ No voices available yet, will retry...');
-            return;
-        }
-        
-        console.log(`🔍 Processing ${allVoices.length} voices...`);
-        voicesLoaded = true;
-      // Advanced English voice detection
-    const englishVoices = allVoices.filter(voice => {
-        const name = voice.name.toLowerCase();
-        const lang = voice.lang.toLowerCase();
-        
-        // Primary English indicators
-        const englishIndicators = [
-            lang.includes('en'),
-            lang.includes('english'),
-            lang === 'en-us',
-            lang === 'en-gb',
-            lang === 'en-au',
-            lang === 'en-ca',
-            lang === 'en-in',
-            name.includes('english')
-        ];
-        
-        return englishIndicators.some(indicator => indicator);
+    const allVoices = speechSynthesis.getVoices();
+    console.log('🔍 Total voices found:', allVoices.length);
+    
+    // Debug: List all voices for troubleshooting
+    allVoices.forEach((voice, index) => {
+        console.log(`${index}: ${voice.name} (${voice.lang}) - ${voice.localService ? 'Local' : 'Remote'}`);
     });
     
-    // Quality voices (best choices)
-    const qualityVoices = allVoices.filter(voice => {
-        const name = voice.name.toLowerCase();
-        const lang = voice.lang.toLowerCase();
+    // Filter for Sinhala voices (multiple approaches)
+    voices = allVoices.filter(voice => {
+        const voiceName = voice.name.toLowerCase();
+        const voiceLang = voice.lang.toLowerCase();
         
-        return (lang.includes('en') && (
-            name.includes('google') ||
-            name.includes('chrome') ||
-            name.includes('natural') ||
-            name.includes('enhanced') ||
-            name.includes('premium') ||
-            name.includes('neural')
-        ));
+        return voiceLang.includes('si') || 
+               voiceLang.includes('sinhala') ||
+               voiceName.includes('sinhala') ||
+               voiceName.includes('සිංහල') ||
+               voiceLang === 'si-lk' ||
+               voiceLang === 'si_lk';
     });
     
-    // Fallback voices (other languages that might work)
-    const fallbackVoices = allVoices.filter(voice => {
-        const name = voice.name.toLowerCase();
-        const lang = voice.lang.toLowerCase();
-        
-        return !englishVoices.includes(voice) && !qualityVoices.includes(voice) && (
-            lang.includes('es') || // Spanish
-            lang.includes('fr') || // French
-            lang.includes('de') || // German
-            lang.includes('it') || // Italian
-            name.includes('microsoft') ||
-            name.includes('apple')
-        );
-    });
-      // Combine voices in priority order
-    voices = [...englishVoices, ...qualityVoices, ...fallbackVoices];
+    // If no Sinhala voices found, try Tamil or Hindi (similar pronunciation)
+    if (voices.length === 0) {
+        voices = allVoices.filter(voice => {
+            const voiceName = voice.name.toLowerCase();
+            const voiceLang = voice.lang.toLowerCase();
+            
+            return voiceLang.includes('ta') || // Tamil
+                   voiceLang.includes('hi') || // Hindi
+                   (voiceLang.includes('en') && voiceName.includes('india'));
+        });
+        console.log('🔄 Using fallback voices (Tamil/Hindi/Indian English):', voices.length);
+    }
     
-    // Remove duplicates
-    voices = voices.filter((voice, index, self) => 
-        index === self.findIndex(v => v.name === voice.name && v.lang === voice.lang)
-    );
+    // Last resort: Use any Google or high-quality English voices
+    if (voices.length === 0) {
+        voices = allVoices.filter(voice => {
+            const voiceName = voice.name.toLowerCase();
+            
+            return voiceName.includes('google') ||
+                   voiceName.includes('chrome') ||
+                   voiceName.includes('natural') ||
+                   voiceName.includes('enhanced');
+        });
+        console.log('� Using high-quality fallback voices:', voices.length);
+    }
     
-    console.log(`✅ Found ${englishVoices.length} English voices`);
-    console.log(`⭐ Found ${qualityVoices.length} quality voices`);
-    console.log(`🔄 Found ${fallbackVoices.length} fallback voices`);
-    console.log(`🎯 Total selected voices: ${voices.length}`);
-      // Update UI
+    console.log('🎯 Final selected voices:', voices.length);
+    console.log('📋 Selected voices:', voices.map(v => `${v.name} (${v.lang})`));
+    
     populateVoiceSelect();
     updateVoiceStatus();
-    updateStatistics();
-    
-    } catch (error) {
-        console.error('❌ Error loading voices:', error);
-        showNotification('Error loading voices. Please refresh the page.', 'error');
-    }
 }
 
-// Modern voice selection UI
+// Populate voice selection dropdown
 function populateVoiceSelect() {
     const voiceSelect = document.getElementById('voiceSelect');
     voiceSelect.innerHTML = '';
     
+    // Get all available voices for fallback
     const allVoices = speechSynthesis.getVoices();
     
     if (allVoices.length === 0) {
+        // No voices loaded yet
         const option = document.createElement('option');
         option.value = '';
-        option.textContent = '🔄 Loading voices... Please wait';
+        option.textContent = 'Loading voices... Please wait';
         voiceSelect.appendChild(option);
         return;
     }
-      // Group voices by type
-    const englishVoices = allVoices.filter(voice => 
-        voice.lang.toLowerCase().includes('en') || 
-        voice.name.toLowerCase().includes('english')
-    );
     
-    const qualityVoices = allVoices.filter(voice => {
-        const name = voice.name.toLowerCase();
-        const lang = voice.lang.toLowerCase();
-        return !englishVoices.includes(voice) && lang.includes('en') && (
-            name.includes('google') || name.includes('chrome') || 
-            name.includes('natural') || name.includes('enhanced')
-        );
-    });
-    
-    const otherVoices = allVoices.filter(voice => 
-        !englishVoices.includes(voice) && !qualityVoices.includes(voice)
-    );
-    
-    // Add English voices
-    if (englishVoices.length > 0) {
-        const group = document.createElement('optgroup');
-        group.label = '�� English Voices (Best)';
-        englishVoices.forEach((voice, index) => {
+    if (voices.length === 0) {
+        // No Sinhala voices found, show all available voices
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'No Sinhala voices found - Using available voices';
+        voiceSelect.appendChild(option);
+        
+        // Add all available voices as options
+        allVoices.forEach((voice, index) => {
             const option = document.createElement('option');
-            option.value = `english_${index}`;
-            option.textContent = `${voice.name} (${voice.lang}) ${voice.localService ? '📱' : '☁️'}`;
-            option.dataset.voice = JSON.stringify(voice);
-            group.appendChild(option);
+            option.value = `fallback_${index}`;
+            option.textContent = `${voice.name} (${voice.lang})`;
+            option.dataset.voiceName = voice.name;
+            option.dataset.voiceLang = voice.lang;
+            voiceSelect.appendChild(option);
         });
-        voiceSelect.appendChild(group);
-    }
-    
-    // Add quality voices
-    if (qualityVoices.length > 0) {
-        const group = document.createElement('optgroup');
-        group.label = '⭐ Premium Voices (Great)';
-        qualityVoices.slice(0, 10).forEach((voice, index) => {
+    } else {
+        // Add Sinhala voices
+        voices.forEach((voice, index) => {
             const option = document.createElement('option');
-            option.value = `quality_${index}`;
-            option.textContent = `${voice.name} (${voice.lang}) ${voice.localService ? '📱' : '☁️'}`;
-            option.dataset.voice = JSON.stringify(voice);
-            group.appendChild(option);
+            option.value = index;
+            option.textContent = `${voice.name} (${voice.lang})`;
+            voiceSelect.appendChild(option);
         });
-        voiceSelect.appendChild(group);
+        
+        // Select the first Sinhala voice by default
+        voiceSelect.selectedIndex = 0;
     }
-    
-    // Add other voices (limited)
-    if (otherVoices.length > 0) {
-        const group = document.createElement('optgroup');
-        group.label = '🌐 Other Voices (Limited)';
-        otherVoices.slice(0, 15).forEach((voice, index) => {
-            const option = document.createElement('option');
-            option.value = `other_${index}`;
-            option.textContent = `${voice.name} (${voice.lang}) ${voice.localService ? '📱' : '☁️'}`;
-            option.dataset.voice = JSON.stringify(voice);
-            group.appendChild(option);
-        });
-        voiceSelect.appendChild(group);
-    }    // Auto-select best voice
-    if (englishVoices.length > 0) {
-        voiceSelect.selectedIndex = 1; // First English voice (after group header)
-        updateVoiceInfo();
-    }
-    
-    // Apply custom styling for better visibility
-    setTimeout(styleSelectOptions, 100);
 }
 
-// Enhanced status display
+// Update voice status display
 function updateVoiceStatus() {
     const allVoices = speechSynthesis.getVoices();
-    const englishVoices = allVoices.filter(voice => 
-        voice.lang.toLowerCase().includes('en') || 
-        voice.name.toLowerCase().includes('english')
-    );
+    const sinhalaVoices = allVoices.filter(voice => {
+        const voiceLang = voice.lang.toLowerCase();
+        const voiceName = voice.name.toLowerCase();
+        return voiceLang.includes('si') || voiceName.includes('sinhala');
+    });
     
-    const statusCard = document.getElementById('statusCard');
+    if (sinhalaVoices.length > 0) {
+        showStatus('success', 'සිංහල හඬ ලබා ගත හැක! | Sinhala Voice Available!', 
+                  `${sinhalaVoices.length} සිංහල හඬ හමු විය | Found ${sinhalaVoices.length} Sinhala voice(s). Ready to speak!`);
+    } else if (voices.length > 0) {
+        showStatus('warning', 'සිංහල හඬ නැත - විකල්ප භාවිතා වේ | No Sinhala Voice - Using Fallback', 
+                  `${voices.length} විකල්ප හඬ හමු විය | Found ${voices.length} alternative voice(s). Speech quality may vary.`);
+    } else {
+        showStatus('error', 'හඬ නොමැත | No Voice Available', 
+                  'Chrome browser භාවිතා කර සිංහල language pack install කරන්න | Use Chrome browser and install Sinhala language pack.');
+    }
+}
+
+// Show status message
+function showStatus(type, title, message) {
+    const statusDiv = document.getElementById('voiceStatus');
     const statusIcon = document.getElementById('statusIcon');
     const statusTitle = document.getElementById('statusTitle');
     const statusMessage = document.getElementById('statusMessage');
     
-    statusCard.classList.remove('hidden');
+    statusDiv.className = 'mb-6 p-4 rounded-lg border-l-4';
     
-    if (englishVoices.length > 0) {
-        statusIcon.className = 'w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-xl';
+    if (type === 'success') {
+        statusDiv.classList.add('bg-green-50', 'border-green-400');
         statusIcon.innerHTML = '✅';
-        statusTitle.textContent = 'English Voices Available!';
-        statusMessage.textContent = `${englishVoices.length} English voice(s) detected. Perfect for English text!`;
-    } else if (voices.length > 0) {
-        statusIcon.className = 'w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center text-xl';
+        statusTitle.className = 'font-medium text-green-800';
+        statusMessage.className = 'text-sm text-green-600';
+    } else if (type === 'warning') {
+        statusDiv.classList.add('bg-yellow-50', 'border-yellow-400');
         statusIcon.innerHTML = '⚠️';
-        statusTitle.textContent = 'Alternative Voices Available';
-        statusMessage.textContent = `${voices.length} alternative voice(s) available. Quality may vary for English text.`;
-    } else {
-        statusIcon.className = 'w-12 h-12 bg-red-500 rounded-full flex items-center justify-center text-xl';
+        statusTitle.className = 'font-medium text-yellow-800';
+        statusMessage.className = 'text-sm text-yellow-600';
+    } else if (type === 'error') {
+        statusDiv.classList.add('bg-red-50', 'border-red-400');
         statusIcon.innerHTML = '❌';
-        statusTitle.textContent = 'No Voices Available';
-        statusMessage.textContent = 'No voices detected. Please check your browser settings and restart.';
+        statusTitle.className = 'font-medium text-red-800';
+        statusMessage.className = 'text-sm text-red-600';
     }
-}
-
-// Voice information display
-function updateVoiceInfo() {
-    const voiceSelect = document.getElementById('voiceSelect');
-    const voiceDetails = document.getElementById('voiceDetails');
     
-    if (voiceSelect.value) {
-        const selectedOption = voiceSelect.options[voiceSelect.selectedIndex];
-        if (selectedOption.dataset.voice) {
-            const voice = JSON.parse(selectedOption.dataset.voice);
-            voiceDetails.innerHTML = `
-                <div class="space-y-2">
-                    <div><strong>Name:</strong> ${voice.name}</div>
-                    <div><strong>Language:</strong> ${voice.lang}</div>
-                    <div><strong>Type:</strong> ${voice.localService ? 'Local Device' : 'Cloud Service'}</div>
-                    <div><strong>Default:</strong> ${voice.default ? 'Yes' : 'No'}</div>
-                </div>
-            `;
-        }
-    } else {
-        voiceDetails.textContent = 'Select a voice to see details';
-    }
+    statusTitle.textContent = title;
+    statusMessage.textContent = message;
+    statusDiv.classList.remove('hidden');
 }
 
-// Enhanced event listeners
+// Setup event listeners
 function setupEventListeners() {
-    // Text input with real-time feedback
+    // Text input character counter
     const textInput = document.getElementById('textInput');
     const charCount = document.getElementById('charCount');
-    
-    if (!textInput || !charCount) {
-        console.error('❌ Critical UI elements not found');
-        return;
-    }
     
     textInput.addEventListener('input', function() {
         const count = this.value.length;
         charCount.textContent = `${count} characters`;
         
-        // Update speak button state
+        // Enable/disable speak button based on text length
         const speakBtn = document.getElementById('speakBtn');
-        if (speakBtn) {
-            speakBtn.disabled = count === 0 || !isSupported;
-            console.log(`🔘 Speak button enabled: ${!speakBtn.disabled}`);
-        }
-        
-        // Word count for longer texts
-        if (count > 100) {
-            const words = this.value.trim().split(/\s+/).length;
-            charCount.textContent = `${count} characters, ${words} words`;
-        }
+        speakBtn.disabled = count === 0 || !isSupported;
     });
-    
-    // Attach event handlers to speech control buttons
-    const speakBtn = document.getElementById('speakBtn');
-    if (speakBtn) {
-        console.log('🔘 Attaching event handler to Speak button');
-        speakBtn.addEventListener('click', speakText);
-    }
-    
-    const pauseBtn = document.getElementById('pauseBtn');
-    if (pauseBtn) {
-        console.log('🔘 Attaching event handler to Pause button');
-        pauseBtn.addEventListener('click', pauseResumeSpeaking);
-    }
-    
-    const stopBtn = document.getElementById('stopBtn');
-    if (stopBtn) {
-        console.log('🔘 Attaching event handler to Stop button');
-        stopBtn.addEventListener('click', stopSpeaking);
-    }
-    
-    const downloadBtn = document.getElementById('downloadBtn');
-    if (downloadBtn) {
-        console.log('🔘 Attaching event handler to Download button');
-        downloadBtn.addEventListener('click', downloadAudio);
-    }
-    
-    // Voice selection change
-    const voiceSelect = document.getElementById('voiceSelect');
-    voiceSelect.addEventListener('change', updateVoiceInfo);
     
     // Speech rate slider
     const rateSlider = document.getElementById('rateSlider');
@@ -465,433 +290,199 @@ function setupEventListeners() {
         rateValue.textContent = `${parseFloat(this.value).toFixed(1)}x`;
     });
     
-    // Refresh voices button
-    const refreshBtn = document.getElementById('refreshVoicesBtn');
-    refreshBtn.addEventListener('click', function() {
-        refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Refreshing...</span>';
-        setTimeout(() => {
-            initializeTTS();
-            refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> <span>Reload Voices</span>';
-        }, 1000);
-    });
-    
-    // Clear text button
-    const clearBtn = document.getElementById('clearTextBtn');
-    clearBtn.addEventListener('click', function() {
-        textInput.value = '';
-        textInput.dispatchEvent(new Event('input'));
-        textInput.focus();
-    });
-    
-    // Help button
-    const helpBtn = document.getElementById('helpBtn');
-    helpBtn.addEventListener('click', showHelpModal);
-    
     // Keyboard shortcuts
     document.addEventListener('keydown', function(e) {
+        // Ctrl/Cmd + Enter to speak
         if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
             e.preventDefault();
             speakText();
         }
         
+        // Escape to stop
         if (e.key === 'Escape') {
             stopSpeaking();
         }
         
-        if (e.key === ' ' && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'INPUT') {
+        // Space to pause/resume (when not focused on textarea)
+        if (e.key === ' ' && e.target.tagName !== 'TEXTAREA') {
             e.preventDefault();
             if (currentUtterance && speechSynthesis.speaking) {
                 pauseResumeSpeaking();
             }
         }
     });
-    
-    // Sample text buttons
-    const sampleButtons = document.querySelectorAll('.sample-button');
-    sampleButtons.forEach(button => {
-        button.addEventListener('click', function(event) {
-            const sampleKey = this.getAttribute('data-sample');
-            setSampleText(sampleKey, event);
-        });
-    });
-    
-    // Test voice button event listener
-    const testVoiceBtn = document.getElementById('testVoiceBtn');
-    if (testVoiceBtn) {
-        testVoiceBtn.addEventListener('click', testCurrentVoice);
-    }
-    
-    // Add event listener for analyze voices button
-    const analyzeVoicesBtn = document.getElementById('analyzeVoicesBtn');
-    if (analyzeVoicesBtn) {
-        analyzeVoicesBtn.addEventListener('click', function() {
-            if (window.ttsDebug && typeof window.ttsDebug.analyzeVoices === 'function') {
-                window.ttsDebug.analyzeVoices();
-                showNotification('Voice analysis complete. Check browser console for details.', 'info');
-            } else {
-                showNotification('Debug tools not available', 'error');
-            }
-        });
-    }
 }
 
-// Function to show status messages
-function showStatus(type, title, message) {
-    const statusCard = document.getElementById('statusCard');
-    const statusIcon = document.getElementById('statusIcon');
-    const statusTitle = document.getElementById('statusTitle');
-    const statusMessage = document.getElementById('statusMessage');
-    
-    if (!statusCard || !statusIcon || !statusTitle || !statusMessage) {
-        console.error('❌ Status card elements not found');
-        return;
-    }
-    
-    statusCard.classList.remove('hidden');
-    
-    // Set icon based on type
-    switch (type) {
-        case 'success':
-            statusIcon.className = 'w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-xl';
-            statusIcon.innerHTML = '✅';
-            break;
-        case 'warning':
-            statusIcon.className = 'w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center text-xl';
-            statusIcon.innerHTML = '⚠️';
-            break;
-        case 'error':
-            statusIcon.className = 'w-12 h-12 bg-red-500 rounded-full flex items-center justify-center text-xl';
-            statusIcon.innerHTML = '❌';
-            break;
-        case 'info':
-        default:
-            statusIcon.className = 'w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-xl';
-            statusIcon.innerHTML = 'ℹ️';
-            break;
-    }
-    
-    statusTitle.textContent = title;
-    statusMessage.textContent = message;
-}
-
-// Enhanced sample text setting
-function setSampleText(sampleKey, event) {
+// Set sample text
+function setSampleText(sampleKey) {
     const textInput = document.getElementById('textInput');
     textInput.value = sampleTexts[sampleKey];
-    textInput.dispatchEvent(new Event('input'));
+    textInput.dispatchEvent(new Event('input')); // Trigger character count update
     textInput.focus();
-    
-    // Add visual feedback
-    let button;
-    if (event && event.target) {
-        button = event.target.closest('.sample-button'); // Get the button element
-    } else {
-        button = document.querySelector(`[data-sample="${sampleKey}"]`);
-    }
-    
-    if (button) {
-        const originalBg = button.className;
-        button.className = button.className.replace('bg-white/10', 'bg-green-500/30');
-        setTimeout(() => {
-            button.className = originalBg;
-        }, 200);
-    }
 }
 
-// Add detailed logging for speech synthesis
+// Main speech function
 function speakText() {
-    console.log('🎯 speakText() function called');
-    
-    const textInput = document.getElementById('textInput');
-    if (!textInput) {
-        console.error('❌ Text input element not found');
-        showNotification('Text input element not found', 'error');
-        return;
-    }
-    
-    const text = textInput.value.trim();
-    console.log('📝 Text to speak:', text);
+    const text = document.getElementById('textInput').value.trim();
     
     if (!text) {
-        console.log('⚠️ No text provided');
-        showNotification('Please enter text to speak', 'warning');
+        alert('කරුණාකර කථනය කිරීමට පාඨයක් ඇතුළත් කරන්න | Please enter text to speak');
         return;
     }
     
     if (!isSupported) {
-        console.error('❌ Speech synthesis not supported');
-        showNotification('Your browser does not support Text-to-Speech', 'error');
+        alert('Your browser does not support Text-to-Speech functionality');
         return;
     }
-    
-    console.log('✅ All checks passed, proceeding with speech synthesis');
-    
-    // Browser compatibility check
-    if (!window.speechSynthesis) {
-        console.error('❌ SpeechSynthesis API not available in window object');
-        showNotification('Speech synthesis is not supported in this browser', 'error');
-        return;
-    }
-    
-    // Log speech synthesis state
-    console.log('💬 Speech Synthesis State:', {
-        speaking: speechSynthesis.speaking,
-        paused: speechSynthesis.paused,
-        pending: speechSynthesis.pending
-    });
     
     // Stop any current speech
-    try {
-        if (speechSynthesis.speaking) {
-            console.log('🛑 Cancelling current speech');
-            speechSynthesis.cancel();
-        }
-        stopSpeaking();
-    } catch (error) {
-        console.error('❌ Error stopping previous speech:', error);
-    }
+    stopSpeaking();
     
-    // Create utterance with enhanced settings
-    try {
-        currentUtterance = new SpeechSynthesisUtterance(text);
-        console.log('✅ Created new utterance object');
-    } catch (error) {
-        console.error('❌ Error creating utterance:', error);
-        showNotification('Error creating speech utterance', 'error');
-        return;
-    }
+    // Create new utterance
+    currentUtterance = new SpeechSynthesisUtterance(text);
     
     // Get selected voice
     const voiceSelect = document.getElementById('voiceSelect');
-    const selectedOption = voiceSelect.options[voiceSelect.selectedIndex];
-    
-    try {
-        if (selectedOption && selectedOption.dataset.voice) {
-            const voiceData = selectedOption.dataset.voice;
-            console.log('🔍 Selected voice data:', voiceData);
-            
-            try {
-                const voice = JSON.parse(voiceData);
-                currentUtterance.voice = voice;
-                console.log('🎙️ Using voice:', voice.name);
-            } catch (parseError) {
-                console.error('❌ Error parsing voice data:', parseError);
-                showNotification('Error with selected voice. Trying a fallback voice.', 'warning');
-                
-                // Auto-select best voice as fallback
-                const bestVoice = getBestVoice();
-                if (bestVoice) {
-                    currentUtterance.voice = bestVoice;
-                    console.log('🤖 Using fallback voice:', bestVoice.name);
-                }
-            }
-        } else {
-            // Auto-select best voice
-            console.log('⚠️ No voice selected, using auto-selection');
-            const bestVoice = getBestVoice();
-            if (bestVoice) {
-                currentUtterance.voice = bestVoice;
-                console.log('🤖 Auto-selected voice:', bestVoice.name);
-            } else {
-                console.warn('⚠️ No voice available, using browser default');
-            }
-        }
-    } catch (voiceError) {
-        console.error('❌ Error setting voice:', voiceError);
-    }
-      
-    // Enhanced speech parameters
-    try {
-        const rate = parseFloat(document.getElementById('rateSlider').value);
-        currentUtterance.rate = rate;
-        currentUtterance.pitch = 1.0;
-        currentUtterance.volume = 1.0;
-        currentUtterance.lang = 'en-US'; // Set to English
-        
-        console.log('🔧 Speech parameters:', {
-            rate: currentUtterance.rate,
-            pitch: currentUtterance.pitch,
-            volume: currentUtterance.volume,
-            lang: currentUtterance.lang
-        });
-    } catch (paramError) {
-        console.error('❌ Error setting speech parameters:', paramError);
-    }
-    
-    // Advanced event handlers
-    try {
-        setupSpeechEvents(text);
-        console.log('✅ Speech events set up');
-    } catch (eventError) {
-        console.error('❌ Error setting up speech events:', eventError);
-    }
-    
-    // Check if we have a voice to use
-    console.log('🔍 Current voice to be used:', currentUtterance.voice ? 
-                currentUtterance.voice.name : 'No voice selected (browser default)');
-    
-    // Start speaking
-    try {
-        showNotification('Starting speech...', 'info');
-        speechSynthesis.speak(currentUtterance);
-        console.log('🚀 Speech started for text:', text.substring(0, 50) + '...');
-        
-        // Update statistics
-        speechCount++;
-        totalCharsSpoken += text.length;
-        updateStatistics();
-        
-    } catch (error) {
-        console.error('❌ Speech failed:', error);
-        showNotification('Speech synthesis failed. Please try again.', 'error');
-    }
-}
-
-// Get best available voice
-function getBestVoice() {
+    const selectedValue = voiceSelect.value;
     const allVoices = speechSynthesis.getVoices();
     
-    if (allVoices.length === 0) {
-        console.warn('⚠️ No voices available to select from');
-        return null;
+    if (selectedValue !== '' && selectedValue.startsWith('fallback_')) {
+        // Using fallback voice from all available voices
+        const voiceIndex = parseInt(selectedValue.replace('fallback_', ''));
+        if (allVoices[voiceIndex]) {
+            currentUtterance.voice = allVoices[voiceIndex];
+            console.log('🎙️ Using fallback voice:', allVoices[voiceIndex].name);
+        }
+    } else if (selectedValue !== '' && voices.length > 0) {
+        // Using selected Sinhala voice
+        const voiceIndex = parseInt(selectedValue);
+        if (voices[voiceIndex]) {
+            currentUtterance.voice = voices[voiceIndex];
+            console.log('🎙️ Using Sinhala voice:', voices[voiceIndex].name);
+        }
+    } else {
+        // Auto-select best available voice
+        let bestVoice = null;
+        
+        // Try to find Sinhala voice
+        bestVoice = allVoices.find(voice => 
+            voice.lang.toLowerCase().includes('si') ||
+            voice.name.toLowerCase().includes('sinhala')
+        );
+        
+        // Fallback to Hindi/Tamil
+        if (!bestVoice) {
+            bestVoice = allVoices.find(voice => 
+                voice.lang.toLowerCase().includes('hi') || 
+                voice.lang.toLowerCase().includes('ta')
+            );
+        }
+        
+        // Fallback to good quality English voices
+        if (!bestVoice) {
+            bestVoice = allVoices.find(voice => 
+                voice.name.toLowerCase().includes('google') ||
+                voice.name.toLowerCase().includes('chrome') ||
+                voice.name.toLowerCase().includes('natural')
+            );
+        }
+        
+        // Last resort: any available voice
+        if (!bestVoice && allVoices.length > 0) {
+            bestVoice = allVoices[0];
+        }
+        
+        if (bestVoice) {
+            currentUtterance.voice = bestVoice;
+            console.log('🔄 Auto-selected voice:', bestVoice.name);
+        }
     }
-      
-    // Try to find English voices first
-    const englishVoices = allVoices.filter(voice => 
-        voice.lang.toLowerCase().includes('en') || 
-        voice.name.toLowerCase().includes('english')
-    );
     
-    if (englishVoices.length > 0) {
-        console.log('✅ Selected English voice:', englishVoices[0].name);
-        return englishVoices[0];
-    }
+    // Force Sinhala language setting (helps some browsers)
+    currentUtterance.lang = 'si-LK';
     
-    // Try to find quality voices
-    const qualityVoices = allVoices.filter(voice => {
-        const name = voice.name.toLowerCase();
-        return name.includes('google') || 
-               name.includes('chrome') || 
-               name.includes('natural') ||
-               name.includes('premium');
-    });
+    // Set speech parameters
+    const rate = parseFloat(document.getElementById('rateSlider').value);
+    currentUtterance.rate = rate;
+    currentUtterance.pitch = 1;
+    currentUtterance.volume = 1;
     
-    if (qualityVoices.length > 0) {
-        console.log('✅ Selected quality voice:', qualityVoices[0].name);
-        return qualityVoices[0];
-    }
-    
-    // Fall back to any voice
-    if (allVoices.length > 0) {
-        console.log('⚠️ Using fallback voice:', allVoices[0].name);
-        return allVoices[0];
-    }
-    
-    console.error('❌ No suitable voice found');
-    return null;
-}
-
-// Enhanced speech event handling
-function setupSpeechEvents(text) {
-    let progressInterval;
-    
+    // Set up event handlers
     currentUtterance.onstart = function() {
         console.log('🎙️ Speech started');
         updateButtonStates('speaking');
         updateProgress('Speaking...', 0);
-        
-        // Smart progress estimation
-        const estimatedDuration = (text.length / 10) * (2 - parseFloat(document.getElementById('rateSlider').value)) * 1000;
-        let progress = 0;
-        
-        progressInterval = setInterval(() => {
-            if (speechSynthesis.speaking && !speechSynthesis.paused) {
-                progress += (100 / (estimatedDuration / 100));
-                if (progress <= 95) {
-                    updateProgress('Speaking...', Math.min(progress, 95));
-                }
-            }
-        }, 100);
     };
     
     currentUtterance.onend = function() {
         console.log('✅ Speech completed');
-        clearInterval(progressInterval);
-        updateButtonStates('idle');        updateProgress('Completed', 100);
-        setTimeout(() => updateProgress('Ready', 0), 2000);
-        showNotification('Speech completed successfully!', 'success');
+        updateButtonStates('idle');
+        updateProgress('Completed', 100);
+        setTimeout(() => updateProgress('Ready to speak', 0), 2000);
     };
     
     currentUtterance.onerror = function(event) {
         console.error('❌ Speech error:', event.error);
-        clearInterval(progressInterval);
         updateButtonStates('idle');
         updateProgress('Error occurred', 0);
         
-        const errorMessages = {
-            'not-allowed': 'Speech not allowed. Please check permissions.',
-            'network': 'Network error. Check your connection.',
-            'synthesis-failed': 'Speech synthesis failed. Try another voice.',
-            'language-not-supported': 'Language not supported. Please try a different voice.'
-        };
+        let errorMessage = 'An error occurred while speaking.';
+        if (event.error === 'not-allowed') {
+            errorMessage = 'Speech synthesis not allowed. Please check browser permissions.';
+        } else if (event.error === 'network') {
+            errorMessage = 'Network error. Please check your internet connection.';
+        } else if (event.error === 'synthesis-failed') {
+            errorMessage = 'Speech synthesis failed. Try installing Sinhala language pack.';
+        }
         
-        const message = errorMessages[event.error] || 'An error occurred during speech synthesis.';
-        showNotification(message, 'error');
+        showStatus('error', 'Speech Error', errorMessage);
     };
     
     currentUtterance.onpause = function() {
         console.log('⏸️ Speech paused');
         updateButtonStates('paused');
-        clearInterval(progressInterval);
     };
     
     currentUtterance.onresume = function() {
         console.log('▶️ Speech resumed');
         updateButtonStates('speaking');
     };
-}
-
-// Chrome-specific workaround for speech synthesis issues
-function initializeChromeWorkaround() {
-    console.log('🔧 Initializing Chrome-specific workaround');
     
-    // Chrome requires a user interaction to fully initialize speech synthesis
-    // This workaround creates a silent utterance to "wake up" the speech synthesis system
-    document.addEventListener('click', function chromeWorkaround() {
-        // Only do this once
-        document.removeEventListener('click', chromeWorkaround);
+    // Simulate progress (since the API doesn't provide real progress)
+    let progressInterval;
+    currentUtterance.onstart = function() {
+        updateButtonStates('speaking');
+        let progress = 0;
+        const progressStep = 100 / Math.max(text.length / 10, 20); // Rough estimation
         
-        console.log('👆 User interaction detected, initializing speech synthesis');
-        
-        // Create a silent utterance
-        const silentUtterance = new SpeechSynthesisUtterance('.');
-        silentUtterance.volume = 0; // Silent
-        silentUtterance.rate = 1;
-        silentUtterance.pitch = 1;
-        silentUtterance.lang = 'en-US';
-        
-        // Set up event listeners
-        silentUtterance.onstart = () => console.log('✅ Chrome workaround: Silent utterance started');
-        silentUtterance.onend = () => {
-            console.log('✅ Chrome workaround: Silent utterance ended, speech synthesis is now ready');
-            // Reload voices after the workaround
-            setTimeout(() => {
-                loadVoices();
-                console.log('🔄 Voices reloaded after Chrome workaround');
-            }, 300);
-        };
-        silentUtterance.onerror = (e) => console.error('❌ Chrome workaround error:', e);
-        
-        // Speak and then immediately cancel to initialize the system
-        speechSynthesis.speak(silentUtterance);
-        setTimeout(() => {
-            speechSynthesis.cancel();
-            console.log('🔄 Chrome workaround: Speech cancelled, synthesis system initialized');
-        }, 100);
-    }, { once: false }); // Allow it to run more than once if needed
+        progressInterval = setInterval(() => {
+            if (speechSynthesis.speaking && !speechSynthesis.paused) {
+                progress += progressStep;
+                if (progress <= 95) {
+                    updateProgress('කථනය කරමින්... | Speaking...', Math.min(progress, 95));
+                }
+            }
+        }, 200);
+    };
+    
+    currentUtterance.onend = function() {
+        clearInterval(progressInterval);
+        updateButtonStates('idle');
+        updateProgress('සම්පූර්ණයි | Completed', 100);
+        setTimeout(() => updateProgress('Ready to speak', 0), 2000);
+    };
+    
+    // Start speaking
+    try {
+        speechSynthesis.speak(currentUtterance);
+        console.log('🚀 Speech synthesis started with text:', text.substring(0, 50) + '...');
+    } catch (error) {
+        console.error('❌ Failed to start speech:', error);
+        showStatus('error', 'Speech Failed', 'Failed to start speech synthesis. Try refreshing the page.');
+    }
 }
 
-// Enhanced control functions
+// Stop speaking
 function stopSpeaking() {
     if (speechSynthesis.speaking) {
         speechSynthesis.cancel();
@@ -900,49 +491,25 @@ function stopSpeaking() {
     currentUtterance = null;
     isPaused = false;
     updateButtonStates('idle');
-    updateProgress('Ready', 0);
+    updateProgress('Ready to speak', 0);
 }
 
+// Pause/Resume speaking
 function pauseResumeSpeaking() {
     if (!currentUtterance || !speechSynthesis.speaking) return;
     
     if (speechSynthesis.paused) {
         speechSynthesis.resume();
         isPaused = false;
-        showNotification('Speech resumed', 'info');
+        console.log('▶️ Speech resumed');
     } else {
         speechSynthesis.pause();
         isPaused = true;
-        showNotification('Speech paused', 'info');
+        console.log('⏸️ Speech paused');
     }
 }
 
-// Test current voice
-function testCurrentVoice() {
-    const voiceSelect = document.getElementById('voiceSelect');
-    const testText = 'Hello! This is a voice test. How do you like this voice?';
-    
-    if (voiceSelect.value) {
-        const originalText = document.getElementById('textInput').value;
-        document.getElementById('textInput').value = testText;
-        speakText();
-        
-        // Restore original text after a delay
-        setTimeout(() => {
-            document.getElementById('textInput').value = originalText;
-            document.getElementById('textInput').dispatchEvent(new Event('input'));
-        }, 3000);
-    } else {
-        showNotification('Please select a voice first', 'warning');
-    }
-}
-
-// Audio download functionality
-function downloadAudio() {
-    showNotification('Audio download feature coming soon!', 'info');
-}
-
-// Enhanced UI updates
+// Update button states
 function updateButtonStates(state) {
     const speakBtn = document.getElementById('speakBtn');
     const stopBtn = document.getElementById('stopBtn');
@@ -950,22 +517,21 @@ function updateButtonStates(state) {
     const pauseIcon = document.getElementById('pauseIcon');
     const pauseText = document.getElementById('pauseText');
     
-    // Reset all buttons
-    [speakBtn, stopBtn, pauseBtn].forEach(btn => {
-        btn.disabled = false;
-        btn.classList.remove('opacity-50', 'cursor-not-allowed');
-    });
-    
-    switch (state) {        case 'speaking':
+    switch (state) {
+        case 'speaking':
             speakBtn.disabled = true;
-            pauseIcon.className = 'fas fa-pause';
-            pauseText.textContent = 'Pause';
+            stopBtn.disabled = false;
+            pauseBtn.disabled = false;
+            pauseIcon.innerHTML = '<path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z"/>';
+            pauseText.textContent = 'විරාමය | Pause';
             break;
             
         case 'paused':
             speakBtn.disabled = true;
-            pauseIcon.className = 'fas fa-play';
-            pauseText.textContent = 'Resume';
+            stopBtn.disabled = false;
+            pauseBtn.disabled = false;
+            pauseIcon.innerHTML = '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"/>';
+            pauseText.textContent = 'දිගටම | Resume';
             break;
             
         case 'idle':
@@ -974,19 +540,13 @@ function updateButtonStates(state) {
             speakBtn.disabled = !hasText || !isSupported;
             stopBtn.disabled = true;
             pauseBtn.disabled = true;
-            pauseIcon.className = 'fas fa-pause';
-            pauseText.textContent = 'Pause';
+            pauseIcon.innerHTML = '<path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z"/>';
+            pauseText.textContent = 'විරාමය | Pause';
             break;
     }
-    
-    // Apply disabled styles
-    [speakBtn, stopBtn, pauseBtn].forEach(btn => {
-        if (btn.disabled) {
-            btn.classList.add('opacity-50', 'cursor-not-allowed');
-        }
-    });
 }
 
+// Update progress display
 function updateProgress(text, percentage) {
     const progressBar = document.getElementById('progressBar');
     const progressText = document.getElementById('progressText');
@@ -995,205 +555,127 @@ function updateProgress(text, percentage) {
     progressText.textContent = text;
 }
 
-function updateStatistics() {
+// Utility functions for debugging
+function listAllVoices() {
     const allVoices = speechSynthesis.getVoices();
-    const englishVoices = allVoices.filter(voice => 
-        voice.lang.toLowerCase().includes('en') || 
-        voice.name.toLowerCase().includes('english')
+    console.log('🔍 All available voices:');
+    allVoices.forEach((voice, index) => {
+        console.log(`${index}: ${voice.name} (${voice.lang}) - ${voice.localService ? 'Local' : 'Remote'}`);
+    });
+    
+    // Group by language for better analysis
+    const languageGroups = {};
+    allVoices.forEach(voice => {
+        const lang = voice.lang.toLowerCase();
+        if (!languageGroups[lang]) {
+            languageGroups[lang] = [];
+        }
+        languageGroups[lang].push(voice.name);
+    });
+    
+    console.log('📊 Voices grouped by language:');
+    Object.keys(languageGroups).sort().forEach(lang => {
+        console.log(`${lang}: ${languageGroups[lang].join(', ')}`);
+    });
+}
+
+function testSinhalaText() {
+    const testTexts = [
+        'ආයුබෝවන්. මේ සිංහල පාඨ කථන පරීක්ෂණයකි.',
+        'සුභ උදෑසනක් වේවා!',
+        'ඔබට කෙසේද? ඔබේ සෞඛ්‍යය හොඳින් තිබේද?',
+        'ශ්‍රී ලංකාව අපේ මාතෘභූමිය.',
+        '123 එක දෙක තුන'
+    ];
+    
+    const randomText = testTexts[Math.floor(Math.random() * testTexts.length)];
+    document.getElementById('textInput').value = randomText;
+    document.getElementById('textInput').dispatchEvent(new Event('input'));
+    console.log('🧪 Test text loaded:', randomText);
+}
+
+function checkVoiceCapabilities() {
+    const allVoices = speechSynthesis.getVoices();
+    const sinhalaVoices = allVoices.filter(voice => 
+        voice.lang.toLowerCase().includes('si') || 
+        voice.name.toLowerCase().includes('sinhala')
     );
     
-    document.getElementById('totalVoicesCount').textContent = allVoices.length;
-    document.getElementById('englishVoicesCount').textContent = englishVoices.length;
-    document.getElementById('speechCount').textContent = speechCount;
-    document.getElementById('totalCharsSpoken').textContent = totalCharsSpoken.toLocaleString();
-}
-
-// Modern notification system
-function showNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 max-w-sm transform transition-all duration-300 translate-x-full`;
+    console.log('🎯 Sinhala Voice Analysis:');
+    console.log(`Total voices: ${allVoices.length}`);
+    console.log(`Sinhala voices: ${sinhalaVoices.length}`);
     
-    const colors = {
-        success: 'bg-green-500 text-white',
-        error: 'bg-red-500 text-white',
-        warning: 'bg-yellow-500 text-black',
-        info: 'bg-blue-500 text-white'
-    };
-    
-    notification.className += ` ${colors[type]}`;
-    notification.textContent = message;
-    
-    document.body.appendChild(notification);
-    
-    // Animate in
-    setTimeout(() => {
-        notification.classList.remove('translate-x-full');
-    }, 100);
-    
-    // Auto remove
-    setTimeout(() => {
-        notification.classList.add('translate-x-full');
-        setTimeout(() => {
-            document.body.removeChild(notification);
-        }, 300);
-    }, 3000);
-}
-
-// Help modal
-function showHelpModal() {
-    showNotification('Help: Use Ctrl+Enter to speak, Esc to stop, Space to pause/resume', 'info');
-}
-
-// Show initial help notification
-function showInitialHelp() {
-    setTimeout(() => {
-        showNotification('Click anywhere on the page first to activate text-to-speech, then click the Speak button', 'info');
-    }, 1500);
-    
-    setTimeout(() => {
-        showNotification('If speech doesn\'t work, try clicking the "Test TTS" button in the bottom right', 'info');
-    }, 4000);
-}
-
-// Enhanced debugging tools
-const debugTools = {
-    listAllVoices() {
-        const allVoices = speechSynthesis.getVoices();
-        console.table(allVoices.map(voice => ({
-            name: voice.name,
-            lang: voice.lang,
-            local: voice.localService,
-            default: voice.default
-        })));
-    },
-      analyzeVoices() {
-        const allVoices = speechSynthesis.getVoices();
-        const analysis = {
-            total: allVoices.length,
-            english: allVoices.filter(v => v.lang.toLowerCase().includes('en')).length,
-            local: allVoices.filter(v => v.localService).length,
-            remote: allVoices.filter(v => !v.localService).length,
-            languages: [...new Set(allVoices.map(v => v.lang))].sort()
-        };
-        console.log('Voice Analysis:', analysis);
-        return analysis;
-    },
-    
-    testEnglishVoices() {
-        const englishVoices = speechSynthesis.getVoices().filter(v => 
-            v.lang.toLowerCase().includes('en') || 
-            v.name.toLowerCase().includes('english')
-        );
-        
-        console.log(`Found ${englishVoices.length} English voices:`);
-        englishVoices.forEach(voice => {
-            console.log(`- ${voice.name} (${voice.lang})`);
+    if (sinhalaVoices.length > 0) {
+        console.log('✅ Sinhala voices available:');
+        sinhalaVoices.forEach(voice => {
+            console.log(`  - ${voice.name} (${voice.lang}) ${voice.localService ? '[Local]' : '[Remote]'}`);
         });
-    },
-    
-    forceReload() {
-        console.log('🔄 Force reloading voices...');
-        voicesLoaded = false;
-        initializeTTS();
+    } else {
+        console.log('⚠️ No Sinhala voices found');
+        console.log('💡 Suggestions:');
+        console.log('  1. Install Sinhala language pack in Windows/Mac');
+        console.log('  2. Use Google Chrome browser');
+        console.log('  3. Add Sinhala in Chrome Languages settings');
     }
+    
+    // Check for fallback options
+    const fallbackVoices = allVoices.filter(voice => {
+        const name = voice.name.toLowerCase();
+        const lang = voice.lang.toLowerCase();
+        return lang.includes('hi') || lang.includes('ta') || 
+               (lang.includes('en') && name.includes('india'));
+    });
+    
+    if (fallbackVoices.length > 0) {
+        console.log('🔄 Available fallback voices:');
+        fallbackVoices.forEach(voice => {
+            console.log(`  - ${voice.name} (${voice.lang})`);
+        });
+    }
+    
+    return {
+        totalVoices: allVoices.length,
+        sinhalaVoices: sinhalaVoices.length,
+        fallbackVoices: fallbackVoices.length,
+        hasGoodSupport: sinhalaVoices.length > 0,
+        hasFallback: fallbackVoices.length > 0
+    };
+}
+
+function forceReloadVoices() {
+    console.log('🔄 Force reloading voices...');
+    
+    // Clear current voices
+    voices = [];
+    
+    // Try multiple methods to trigger voice loading
+    const utterance = new SpeechSynthesisUtterance(' ');
+    speechSynthesis.speak(utterance);
+    speechSynthesis.cancel();
+    
+    setTimeout(() => {
+        loadVoices();
+        console.log('✅ Voice reload complete');
+    }, 500);
+}
+
+// Export functions for debugging (attach to window)
+window.ttsDebug = {
+    listAllVoices,
+    testSinhalaText,
+    checkVoiceCapabilities,
+    forceReloadVoices,
+    voices: () => voices,
+    allVoices: () => speechSynthesis.getVoices(),
+    isSupported: () => isSupported,
+    currentUtterance: () => currentUtterance
 };
 
-// Export debug tools
-window.ttsDebug = debugTools;
-
-// Simple test function to verify TTS is working
-function testTTS() {
-    console.log('🧪 Testing TTS functionality...');
-    
-    if (!window.speechSynthesis) {
-        console.error('❌ SpeechSynthesis not available');
-        return false;
-    }
-    
-    const testUtterance = new SpeechSynthesisUtterance('Hello, this is a test.');
-    testUtterance.lang = 'en-US';
-    testUtterance.rate = 1;
-    testUtterance.pitch = 1;
-    testUtterance.volume = 1;
-    
-    testUtterance.onstart = () => console.log('✅ TTS Test started successfully');
-    testUtterance.onend = () => console.log('✅ TTS Test completed successfully');
-    testUtterance.onerror = (e) => console.error('❌ TTS Test failed:', e);
-    
-    try {
-        speechSynthesis.speak(testUtterance);
-        console.log('📢 TTS test utterance sent to synthesis');
-        return true;
-    } catch (error) {
-        console.error('❌ Error in TTS test:', error);
-        return false;
-    }
-}
-
-// Add debug button for testing
-function addDebugButton() {
-    const debugButton = document.createElement('button');
-    debugButton.textContent = '🧪 Test TTS';
-    debugButton.className = 'fixed bottom-4 right-4 px-4 py-2 bg-red-500 text-white rounded-lg z-50';
-    debugButton.onclick = testTTS;
-    document.body.appendChild(debugButton);
-    console.log('🛠️ Debug button added');
-}
-
-// Enhanced select styling function
-function styleSelectOptions() {
-    const voiceSelect = document.getElementById('voiceSelect');
-    if (!voiceSelect) return;
-    
-    // Apply enhanced dark theme styling
-    voiceSelect.style.cssText = `
-        background-color: rgba(30, 30, 30, 0.95) !important;
-        color: white !important;
-        border: 2px solid rgba(255, 255, 255, 0.3) !important;
-        font-size: 14px !important;
-        font-family: 'Inter', 'Poppins', system-ui, sans-serif !important;
-    `;
-    
-    // Enhanced option styling
-    Array.from(voiceSelect.options).forEach((option, index) => {
-        option.style.cssText = `
-            background-color: rgba(30, 30, 30, 0.98) !important;
-            color: ${option.value ? 'white' : '#94a3b8'} !important;
-            padding: 12px 16px !important;
-            font-size: 14px !important;
-            border: none !important;
-        `;
-        
-        // Add hover effect through JavaScript since CSS might not work
-        option.addEventListener('mouseover', function() {
-            this.style.backgroundColor = 'rgba(59, 130, 246, 0.4) !important';
-        });
-        
-        option.addEventListener('mouseout', function() {
-            this.style.backgroundColor = 'rgba(30, 30, 30, 0.98) !important';
-        });
-    });
-    
-    // Enhanced optgroup styling
-    Array.from(voiceSelect.querySelectorAll('optgroup')).forEach(optgroup => {
-        optgroup.style.cssText = `
-            background-color: rgba(15, 15, 15, 0.99) !important;
-            color: #60a5fa !important;
-            font-weight: bold !important;
-            font-size: 13px !important;
-            padding: 8px 12px !important;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-        `;
-    });
-    
-    console.log('🎨 Select dropdown enhanced with better visibility');
-}
-
-// Initialize page
-console.log('🎯 Modern English TTS App loaded successfully!');
-console.log('🛠️ Debug tools: window.ttsDebug');
-console.log('📊 Available methods: listAllVoices, analyzeVoices, testEnglishVoices, forceReload');
-
-styleSelectOptions();
-
-showInitialHelp();
+console.log('🎯 Sinhala TTS App initialized successfully!');
+console.log('🛠️ Debug functions available:');
+console.log('  - window.ttsDebug.listAllVoices() - List all available voices');
+console.log('  - window.ttsDebug.testSinhalaText() - Load test Sinhala text');
+console.log('  - window.ttsDebug.checkVoiceCapabilities() - Analyze voice support');
+console.log('  - window.ttsDebug.forceReloadVoices() - Force reload voices');
+console.log('  - window.ttsDebug.voices() - Show currently selected voices');
+console.log('  - window.ttsDebug.allVoices() - Show all browser voices');
