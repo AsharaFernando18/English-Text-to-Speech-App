@@ -1,13 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,                     <textarea 
+<head>    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English TTS | Modern Text-to-Speech Applic                    <textarea 
                         id="textInput" 
                         placeholder="Type your English text here... ✍️"
                         class="w-full h-48 p-4 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/60 modern-font text-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-transparent transition-all duration-300"
-                    >Hello! Welcome to our English Text-to-Speech application. Click the Speak button to hear this text.</textarea>al-scale=1.0">
-    <title>English TTS | Modern Text-to-Speech Application</title>
+                    >Hello! Welcome to our English Text-to-Speech application. Click the Speak button to hear this text.</textarea></title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -213,25 +212,24 @@
                             <i class="fas fa-lightbulb text-yellow-300 mr-1"></i>
                             Quick Samples:
                         </p>
-                        <div class="flex flex-wrap gap-2">
-                            <button onclick="setSampleText('sample1')" 
-                                    class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-300 modern-font text-sm">
+                        <div class="flex flex-wrap gap-2">                            <button data-sample="sample1" class="sample-button
+                                    px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-300 modern-font text-sm">
                                 <i class="fas fa-sun text-yellow-300 mr-1"></i>Good Morning
                             </button>
-                            <button onclick="setSampleText('sample2')" 
-                                    class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-300 modern-font text-sm">
+                            <button data-sample="sample2" class="sample-button
+                                    px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-300 modern-font text-sm">
                                 <i class="fas fa-heart text-red-300 mr-1"></i>How are you?
                             </button>
-                            <button onclick="setSampleText('sample3')" 
-                                    class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-300 modern-font text-sm">
+                            <button data-sample="sample3" class="sample-button
+                                    px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-300 modern-font text-sm">
                                 <i class="fas fa-hands text-green-300 mr-1"></i>Thank you
                             </button>
-                            <button onclick="setSampleText('sample4')" 
-                                    class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-300 modern-font text-sm">
+                            <button data-sample="sample4" class="sample-button
+                                    px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-300 modern-font text-sm">
                                 <i class="fas fa-globe text-blue-300 mr-1"></i>Welcome
                             </button>
-                            <button onclick="setSampleText('sample5')" 
-                                    class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-300 modern-font text-sm">
+                            <button data-sample="sample5" class="sample-button
+                                    px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-300 modern-font text-sm">
                                 <i class="fas fa-graduation-cap text-purple-300 mr-1"></i>Long Text
                             </button>
                         </div>
@@ -245,26 +243,22 @@
                     </h3>
                     
                     <!-- Control Buttons -->
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-                        <button id="speakBtn" onclick="speakText()" 
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">                        <button id="speakBtn"
                                 class="btn-primary text-white px-6 py-3 rounded-xl font-medium flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed">
                             <i class="fas fa-play"></i>
                             <span class="modern-font">Speak</span>
                         </button>
-                        
-                        <button id="pauseBtn" onclick="pauseResumeSpeaking()" 
+                          <button id="pauseBtn"
                                 class="px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center space-x-2">
                             <i id="pauseIcon" class="fas fa-pause"></i>
                             <span id="pauseText" class="modern-font">Pause</span>
                         </button>
-                        
-                        <button id="stopBtn" onclick="stopSpeaking()" 
+                          <button id="stopBtn"
                                 class="px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center space-x-2">
                             <i class="fas fa-stop"></i>
                             <span>Stop</span>
                         </button>
-                        
-                        <button id="downloadBtn" onclick="downloadAudio()" 
+                          <button id="downloadBtn"
                                 class="px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center space-x-2">
                             <i class="fas fa-download"></i>
                             <span>Save</span>
@@ -319,9 +313,8 @@
                                 Select a voice to see details
                             </div>
                         </div>
-                        
-                        <!-- Voice Test -->
-                        <button id="testVoiceBtn" onclick="testCurrentVoice()" 
+                          <!-- Voice Test -->
+                        <button id="testVoiceBtn"
                                 class="w-full px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-300 flex items-center justify-center space-x-2">
                             <i class="fas fa-vial"></i>
                             <span>Test Voice</span>

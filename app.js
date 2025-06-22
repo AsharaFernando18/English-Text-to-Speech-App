@@ -30,19 +30,37 @@ document.addEventListener('DOMContentLoaded', function() {
         setupEventListeners();
         updateStatistics();
         
+        // Initialize Chrome workaround
+        initializeChromeWorkaround();
+        
+        // Initialize text input with default content
+        const textInput = document.getElementById('textInput');
+        if (textInput) {
+            textInput.dispatchEvent(new Event('input'));
+            console.log('📝 Text input initialized with default content');
+        } else {
+            console.error('❌ Text input not found during initialization');
+        }
+        
         // Add a test button to the page for debugging
         addDebugButton();
         
-        console.log('🎯 Initialization complete');
-    }, 100);        // Initialize text input with default content
-        const textInput = document.getElementById('textInput');
-        if (textInput && textInput.value) {
-            textInput.dispatchEvent(new Event('input'));
-            console.log('📝 Text input initialized with default content');
-        }
-        
         // Apply initial styling to select dropdown
         setTimeout(styleSelectOptions, 500);
+        
+        // Show help notifications
+        showInitialHelp();
+        
+        // Extra check to make sure voices are loaded
+        setTimeout(() => {
+            if (!voicesLoaded) {
+                console.log('⚠️ Voices not loaded yet. Trying again...');
+                initializeTTS();
+            }
+        }, 2000);
+        
+        console.log('🎯 Initialization complete');
+    }, 100);
 });
 
 // Enhanced browser support check
@@ -382,7 +400,8 @@ function updateVoiceInfo() {
 }
 
 // Enhanced event listeners
-function setupEventListeners() {    // Text input with real-time feedback
+function setupEventListeners() {
+    // Text input with real-time feedback
     const textInput = document.getElementById('textInput');
     const charCount = document.getElementById('charCount');
     
@@ -408,6 +427,31 @@ function setupEventListeners() {    // Text input with real-time feedback
             charCount.textContent = `${count} characters, ${words} words`;
         }
     });
+    
+    // Attach event handlers to speech control buttons
+    const speakBtn = document.getElementById('speakBtn');
+    if (speakBtn) {
+        console.log('🔘 Attaching event handler to Speak button');
+        speakBtn.addEventListener('click', speakText);
+    }
+    
+    const pauseBtn = document.getElementById('pauseBtn');
+    if (pauseBtn) {
+        console.log('🔘 Attaching event handler to Pause button');
+        pauseBtn.addEventListener('click', pauseResumeSpeaking);
+    }
+    
+    const stopBtn = document.getElementById('stopBtn');
+    if (stopBtn) {
+        console.log('🔘 Attaching event handler to Stop button');
+        stopBtn.addEventListener('click', stopSpeaking);
+    }
+    
+    const downloadBtn = document.getElementById('downloadBtn');
+    if (downloadBtn) {
+        console.log('🔘 Attaching event handler to Download button');
+        downloadBtn.addEventListener('click', downloadAudio);
+    }
     
     // Voice selection change
     const voiceSelect = document.getElementById('voiceSelect');
@@ -461,25 +505,87 @@ function setupEventListeners() {    // Text input with real-time feedback
             }
         }
     });
+    
+    // Sample text buttons
+    const sampleButtons = document.querySelectorAll('.sample-button');
+    sampleButtons.forEach(button => {
+        button.addEventListener('click', function(event) {
+            const sampleKey = this.getAttribute('data-sample');
+            setSampleText(sampleKey, event);
+        });
+    });
+    
+    // Test voice button event listener
+    const testVoiceBtn = document.getElementById('testVoiceBtn');
+    if (testVoiceBtn) {
+        testVoiceBtn.addEventListener('click', testCurrentVoice);
+    }
+}
+
+// Function to show status messages
+function showStatus(type, title, message) {
+    const statusCard = document.getElementById('statusCard');
+    const statusIcon = document.getElementById('statusIcon');
+    const statusTitle = document.getElementById('statusTitle');
+    const statusMessage = document.getElementById('statusMessage');
+    
+    if (!statusCard || !statusIcon || !statusTitle || !statusMessage) {
+        console.error('❌ Status card elements not found');
+        return;
+    }
+    
+    statusCard.classList.remove('hidden');
+    
+    // Set icon based on type
+    switch (type) {
+        case 'success':
+            statusIcon.className = 'w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-xl';
+            statusIcon.innerHTML = '✅';
+            break;
+        case 'warning':
+            statusIcon.className = 'w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center text-xl';
+            statusIcon.innerHTML = '⚠️';
+            break;
+        case 'error':
+            statusIcon.className = 'w-12 h-12 bg-red-500 rounded-full flex items-center justify-center text-xl';
+            statusIcon.innerHTML = '❌';
+            break;
+        case 'info':
+        default:
+            statusIcon.className = 'w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-xl';
+            statusIcon.innerHTML = 'ℹ️';
+            break;
+    }
+    
+    statusTitle.textContent = title;
+    statusMessage.textContent = message;
 }
 
 // Enhanced sample text setting
-function setSampleText(sampleKey) {
+function setSampleText(sampleKey, event) {
     const textInput = document.getElementById('textInput');
     textInput.value = sampleTexts[sampleKey];
     textInput.dispatchEvent(new Event('input'));
     textInput.focus();
     
     // Add visual feedback
-    const button = event.target;
-    const originalBg = button.className;
-    button.className = button.className.replace('bg-white/10', 'bg-green-500/30');
-    setTimeout(() => {
-        button.className = originalBg;
-    }, 200);
+    let button;
+    if (event && event.target) {
+        button = event.target.closest('.sample-button'); // Get the button element
+    } else {
+        button = document.querySelector(`[data-sample="${sampleKey}"]`);
+    }
+    
+    if (button) {
+        const originalBg = button.className;
+        button.className = button.className.replace('bg-white/10', 'bg-green-500/30');
+        setTimeout(() => {
+            button.className = originalBg;
+        }, 200);
+    }
 }
 
-// Revolutionary speech synthesis
+// Add detailed logging for speech synthesis
 function speakText() {
     console.log('🎯 speakText() function called');
     
@@ -507,42 +613,115 @@ function speakText() {
     
     console.log('✅ All checks passed, proceeding with speech synthesis');
     
+    // Browser compatibility check
+    if (!window.speechSynthesis) {
+        console.error('❌ SpeechSynthesis API not available in window object');
+        showNotification('Speech synthesis is not supported in this browser', 'error');
+        return;
+    }
+    
+    // Log speech synthesis state
+    console.log('💬 Speech Synthesis State:', {
+        speaking: speechSynthesis.speaking,
+        paused: speechSynthesis.paused,
+        pending: speechSynthesis.pending
+    });
+    
     // Stop any current speech
-    stopSpeaking();
+    try {
+        if (speechSynthesis.speaking) {
+            console.log('🛑 Cancelling current speech');
+            speechSynthesis.cancel();
+        }
+        stopSpeaking();
+    } catch (error) {
+        console.error('❌ Error stopping previous speech:', error);
+    }
     
     // Create utterance with enhanced settings
-    currentUtterance = new SpeechSynthesisUtterance(text);
+    try {
+        currentUtterance = new SpeechSynthesisUtterance(text);
+        console.log('✅ Created new utterance object');
+    } catch (error) {
+        console.error('❌ Error creating utterance:', error);
+        showNotification('Error creating speech utterance', 'error');
+        return;
+    }
     
     // Get selected voice
     const voiceSelect = document.getElementById('voiceSelect');
     const selectedOption = voiceSelect.options[voiceSelect.selectedIndex];
     
-    if (selectedOption && selectedOption.dataset.voice) {
-        const voice = JSON.parse(selectedOption.dataset.voice);
-        currentUtterance.voice = voice;
-        console.log('🎙️ Using voice:', voice.name);
-    } else {
-        // Auto-select best voice
-        const bestVoice = getBestVoice();
-        if (bestVoice) {
-            currentUtterance.voice = bestVoice;
-            console.log('🤖 Auto-selected voice:', bestVoice.name);
+    try {
+        if (selectedOption && selectedOption.dataset.voice) {
+            const voiceData = selectedOption.dataset.voice;
+            console.log('🔍 Selected voice data:', voiceData);
+            
+            try {
+                const voice = JSON.parse(voiceData);
+                currentUtterance.voice = voice;
+                console.log('🎙️ Using voice:', voice.name);
+            } catch (parseError) {
+                console.error('❌ Error parsing voice data:', parseError);
+                showNotification('Error with selected voice. Trying a fallback voice.', 'warning');
+                
+                // Auto-select best voice as fallback
+                const bestVoice = getBestVoice();
+                if (bestVoice) {
+                    currentUtterance.voice = bestVoice;
+                    console.log('🤖 Using fallback voice:', bestVoice.name);
+                }
+            }
+        } else {
+            // Auto-select best voice
+            console.log('⚠️ No voice selected, using auto-selection');
+            const bestVoice = getBestVoice();
+            if (bestVoice) {
+                currentUtterance.voice = bestVoice;
+                console.log('🤖 Auto-selected voice:', bestVoice.name);
+            } else {
+                console.warn('⚠️ No voice available, using browser default');
+            }
         }
+    } catch (voiceError) {
+        console.error('❌ Error setting voice:', voiceError);
     }
-      // Enhanced speech parameters
-    const rate = parseFloat(document.getElementById('rateSlider').value);
-    currentUtterance.rate = rate;
-    currentUtterance.pitch = 1.0;
-    currentUtterance.volume = 1.0;
-    currentUtterance.lang = 'en-US'; // Set to English
+      
+    // Enhanced speech parameters
+    try {
+        const rate = parseFloat(document.getElementById('rateSlider').value);
+        currentUtterance.rate = rate;
+        currentUtterance.pitch = 1.0;
+        currentUtterance.volume = 1.0;
+        currentUtterance.lang = 'en-US'; // Set to English
+        
+        console.log('🔧 Speech parameters:', {
+            rate: currentUtterance.rate,
+            pitch: currentUtterance.pitch,
+            volume: currentUtterance.volume,
+            lang: currentUtterance.lang
+        });
+    } catch (paramError) {
+        console.error('❌ Error setting speech parameters:', paramError);
+    }
     
     // Advanced event handlers
-    setupSpeechEvents(text);
+    try {
+        setupSpeechEvents(text);
+        console.log('✅ Speech events set up');
+    } catch (eventError) {
+        console.error('❌ Error setting up speech events:', eventError);
+    }
+    
+    // Check if we have a voice to use
+    console.log('🔍 Current voice to be used:', currentUtterance.voice ? 
+                currentUtterance.voice.name : 'No voice selected (browser default)');
     
     // Start speaking
     try {
+        showNotification('Starting speech...', 'info');
         speechSynthesis.speak(currentUtterance);
-        console.log('🚀 Speech started:', text.substring(0, 50) + '...');
+        console.log('🚀 Speech started for text:', text.substring(0, 50) + '...');
         
         // Update statistics
         speechCount++;
@@ -558,21 +737,44 @@ function speakText() {
 // Get best available voice
 function getBestVoice() {
     const allVoices = speechSynthesis.getVoices();
-      // Priority order
-    const priorities = [
-        // English voices
-        voice => voice.lang.toLowerCase().includes('en') || voice.name.toLowerCase().includes('english'),
-        // Quality voices
-        voice => voice.name.toLowerCase().includes('google') || voice.name.toLowerCase().includes('chrome'),
-        // Any voice
-        voice => true
-    ];
     
-    for (const priority of priorities) {
-        const voice = allVoices.find(priority);
-        if (voice) return voice;
+    if (allVoices.length === 0) {
+        console.warn('⚠️ No voices available to select from');
+        return null;
+    }
+      
+    // Try to find English voices first
+    const englishVoices = allVoices.filter(voice => 
+        voice.lang.toLowerCase().includes('en') || 
+        voice.name.toLowerCase().includes('english')
+    );
+    
+    if (englishVoices.length > 0) {
+        console.log('✅ Selected English voice:', englishVoices[0].name);
+        return englishVoices[0];
     }
     
+    // Try to find quality voices
+    const qualityVoices = allVoices.filter(voice => {
+        const name = voice.name.toLowerCase();
+        return name.includes('google') || 
+               name.includes('chrome') || 
+               name.includes('natural') ||
+               name.includes('premium');
+    });
+    
+    if (qualityVoices.length > 0) {
+        console.log('✅ Selected quality voice:', qualityVoices[0].name);
+        return qualityVoices[0];
+    }
+    
+    // Fall back to any voice
+    if (allVoices.length > 0) {
+        console.log('⚠️ Using fallback voice:', allVoices[0].name);
+        return allVoices[0];
+    }
+    
+    console.error('❌ No suitable voice found');
     return null;
 }
 
@@ -634,6 +836,46 @@ function setupSpeechEvents(text) {
         console.log('▶️ Speech resumed');
         updateButtonStates('speaking');
     };
+}
+
+// Chrome-specific workaround for speech synthesis issues
+function initializeChromeWorkaround() {
+    console.log('🔧 Initializing Chrome-specific workaround');
+    
+    // Chrome requires a user interaction to fully initialize speech synthesis
+    // This workaround creates a silent utterance to "wake up" the speech synthesis system
+    document.addEventListener('click', function chromeWorkaround() {
+        // Only do this once
+        document.removeEventListener('click', chromeWorkaround);
+        
+        console.log('👆 User interaction detected, initializing speech synthesis');
+        
+        // Create a silent utterance
+        const silentUtterance = new SpeechSynthesisUtterance('.');
+        silentUtterance.volume = 0; // Silent
+        silentUtterance.rate = 1;
+        silentUtterance.pitch = 1;
+        silentUtterance.lang = 'en-US';
+        
+        // Set up event listeners
+        silentUtterance.onstart = () => console.log('✅ Chrome workaround: Silent utterance started');
+        silentUtterance.onend = () => {
+            console.log('✅ Chrome workaround: Silent utterance ended, speech synthesis is now ready');
+            // Reload voices after the workaround
+            setTimeout(() => {
+                loadVoices();
+                console.log('🔄 Voices reloaded after Chrome workaround');
+            }, 300);
+        };
+        silentUtterance.onerror = (e) => console.error('❌ Chrome workaround error:', e);
+        
+        // Speak and then immediately cancel to initialize the system
+        speechSynthesis.speak(silentUtterance);
+        setTimeout(() => {
+            speechSynthesis.cancel();
+            console.log('🔄 Chrome workaround: Speech cancelled, synthesis system initialized');
+        }, 100);
+    }, { once: false }); // Allow it to run more than once if needed
 }
 
 // Enhanced control functions
@@ -789,6 +1031,17 @@ function showHelpModal() {
     showNotification('Help: Use Ctrl+Enter to speak, Esc to stop, Space to pause/resume', 'info');
 }
 
+// Show initial help notification
+function showInitialHelp() {
+    setTimeout(() => {
+        showNotification('Click anywhere on the page first to activate text-to-speech, then click the Speak button', 'info');
+    }, 1500);
+    
+    setTimeout(() => {
+        showNotification('If speech doesn\'t work, try clicking the "Test TTS" button in the bottom right', 'info');
+    }, 4000);
+}
+
 // Enhanced debugging tools
 const debugTools = {
     listAllVoices() {
@@ -929,3 +1182,5 @@ console.log('🛠️ Debug tools: window.ttsDebug');
 console.log('📊 Available methods: listAllVoices, analyzeVoices, testEnglishVoices, forceReload');
 
 styleSelectOptions();
+
+showInitialHelp();
