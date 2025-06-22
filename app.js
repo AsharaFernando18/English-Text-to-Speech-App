@@ -1,4 +1,4 @@
-// Modern Sinhala Text-to-Speech Application
+// Modern English Text-to-Speech Application
 // Enhanced with better voice detection and modern features
 
 // Global variables
@@ -12,20 +12,37 @@ let voicesLoaded = false;
 
 // Enhanced sample texts
 const sampleTexts = {
-    sample1: 'සුභ උදෑසනක්! ඔබට දිනයක් සුභපතනවා.',
-    sample2: 'ඔබට කෙසේද? ඔබේ සෞඛ්‍යය සම්පන්න ද?',
-    sample3: 'ස්තූතියි! ඔබේ සහයෝගයට ගොඩක් පිං.',
-    sample4: 'ශ්‍රී ලංකාව අපේ රට. අපේ මාතෘභූමිය ඉතාම ලස්සන.',
-    sample5: 'විද්‍යාව හා තාක්ෂණය අපේ ජීවිතය වෙනස් කරන්නට ඇති. පරිගණක තාක්ෂණය මගින් අප පහසුවෙන් සම්බන්ධ වී කටයුතු කරන්නට හැකිය. මෙම වෙබ් යෙදුම මගින් සිංහල පාඨ කථනය කිරීම පහසු වෙයි.'
+    sample1: 'Good morning! Have a wonderful day ahead.',
+    sample2: 'How are you today? I hope you are doing well.',
+    sample3: 'Thank you so much for using this application.',
+    sample4: 'Welcome to our modern text-to-speech application.',
+    sample5: 'Technology and science continue to change our lives in amazing ways. Computer technology allows us to connect and work together easily. This web application makes text-to-speech conversion simple and accessible for everyone.'
 };
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Initializing Modern Sinhala TTS...');
-    checkBrowserSupport();
-    initializeTTS();
-    setupEventListeners();
-    updateStatistics();
+    console.log('🚀 Initializing Modern English TTS...');
+    
+    // Force a delay to ensure DOM is fully loaded
+    setTimeout(() => {
+        checkBrowserSupport();
+        initializeTTS();
+        setupEventListeners();
+        updateStatistics();
+        
+        // Add a test button to the page for debugging
+        addDebugButton();
+        
+        console.log('🎯 Initialization complete');
+    }, 100);        // Initialize text input with default content
+        const textInput = document.getElementById('textInput');
+        if (textInput && textInput.value) {
+            textInput.dispatchEvent(new Event('input'));
+            console.log('📝 Text input initialized with default content');
+        }
+        
+        // Apply initial styling to select dropdown
+        setTimeout(styleSelectOptions, 500);
 });
 
 // Enhanced browser support check
@@ -143,74 +160,86 @@ function loadVoicesWithPolling() {
 
 // Enhanced voice loading and filtering
 function loadVoices() {
-    const allVoices = speechSynthesis.getVoices();
-    
-    if (allVoices.length === 0) {
-        console.log('⏳ No voices available yet, will retry...');
-        return;
-    }
-    
-    console.log(`🔍 Processing ${allVoices.length} voices...`);
-    voicesLoaded = true;
-    
-    // Advanced Sinhala voice detection
-    const sinhalaVoices = allVoices.filter(voice => {
+    try {
+        const allVoices = speechSynthesis.getVoices();
+        
+        if (allVoices.length === 0) {
+            console.log('⏳ No voices available yet, will retry...');
+            return;
+        }
+        
+        console.log(`🔍 Processing ${allVoices.length} voices...`);
+        voicesLoaded = true;
+      // Advanced English voice detection
+    const englishVoices = allVoices.filter(voice => {
         const name = voice.name.toLowerCase();
         const lang = voice.lang.toLowerCase();
         
-        // Primary Sinhala indicators
-        const sinhalaIndicators = [
-            lang.includes('si'),
-            lang.includes('sinhala'),
-            lang === 'si-lk',
-            lang === 'si_lk',
-            name.includes('sinhala'),
-            name.includes('සිංහල')
+        // Primary English indicators
+        const englishIndicators = [
+            lang.includes('en'),
+            lang.includes('english'),
+            lang === 'en-us',
+            lang === 'en-gb',
+            lang === 'en-au',
+            lang === 'en-ca',
+            lang === 'en-in',
+            name.includes('english')
         ];
         
-        return sinhalaIndicators.some(indicator => indicator);
+        return englishIndicators.some(indicator => indicator);
     });
     
-    // Secondary choices (related languages)
+    // Quality voices (best choices)
+    const qualityVoices = allVoices.filter(voice => {
+        const name = voice.name.toLowerCase();
+        const lang = voice.lang.toLowerCase();
+        
+        return (lang.includes('en') && (
+            name.includes('google') ||
+            name.includes('chrome') ||
+            name.includes('natural') ||
+            name.includes('enhanced') ||
+            name.includes('premium') ||
+            name.includes('neural')
+        ));
+    });
+    
+    // Fallback voices (other languages that might work)
     const fallbackVoices = allVoices.filter(voice => {
         const name = voice.name.toLowerCase();
         const lang = voice.lang.toLowerCase();
         
-        return lang.includes('ta') || // Tamil
-               lang.includes('hi') || // Hindi
-               lang.includes('bn') || // Bengali
-               (lang.includes('en') && name.includes('india')) || // Indian English
-               (name.includes('google') && lang.includes('en')); // Google English
+        return !englishVoices.includes(voice) && !qualityVoices.includes(voice) && (
+            lang.includes('es') || // Spanish
+            lang.includes('fr') || // French
+            lang.includes('de') || // German
+            lang.includes('it') || // Italian
+            name.includes('microsoft') ||
+            name.includes('apple')
+        );
     });
-    
-    // Quality voices (best fallback)
-    const qualityVoices = allVoices.filter(voice => {
-        const name = voice.name.toLowerCase();
-        
-        return name.includes('google') ||
-               name.includes('chrome') ||
-               name.includes('natural') ||
-               name.includes('enhanced') ||
-               name.includes('premium');
-    });
-    
-    // Combine voices in priority order
-    voices = [...sinhalaVoices, ...fallbackVoices, ...qualityVoices];
+      // Combine voices in priority order
+    voices = [...englishVoices, ...qualityVoices, ...fallbackVoices];
     
     // Remove duplicates
     voices = voices.filter((voice, index, self) => 
         index === self.findIndex(v => v.name === voice.name && v.lang === voice.lang)
     );
     
-    console.log(`✅ Found ${sinhalaVoices.length} Sinhala voices`);
-    console.log(`🔄 Found ${fallbackVoices.length} fallback voices`);
+    console.log(`✅ Found ${englishVoices.length} English voices`);
     console.log(`⭐ Found ${qualityVoices.length} quality voices`);
+    console.log(`🔄 Found ${fallbackVoices.length} fallback voices`);
     console.log(`🎯 Total selected voices: ${voices.length}`);
-    
-    // Update UI
+      // Update UI
     populateVoiceSelect();
     updateVoiceStatus();
     updateStatistics();
+    
+    } catch (error) {
+        console.error('❌ Error loading voices:', error);
+        showNotification('Error loading voices. Please refresh the page.', 'error');
+    }
 }
 
 // Modern voice selection UI
@@ -227,33 +256,32 @@ function populateVoiceSelect() {
         voiceSelect.appendChild(option);
         return;
     }
-    
-    // Group voices by type
-    const sinhalaVoices = allVoices.filter(voice => 
-        voice.lang.toLowerCase().includes('si') || 
-        voice.name.toLowerCase().includes('sinhala')
+      // Group voices by type
+    const englishVoices = allVoices.filter(voice => 
+        voice.lang.toLowerCase().includes('en') || 
+        voice.name.toLowerCase().includes('english')
     );
     
-    const fallbackVoices = allVoices.filter(voice => {
+    const qualityVoices = allVoices.filter(voice => {
         const name = voice.name.toLowerCase();
         const lang = voice.lang.toLowerCase();
-        return !sinhalaVoices.includes(voice) && (
-            lang.includes('ta') || lang.includes('hi') || lang.includes('bn') ||
-            (lang.includes('en') && name.includes('india'))
+        return !englishVoices.includes(voice) && lang.includes('en') && (
+            name.includes('google') || name.includes('chrome') || 
+            name.includes('natural') || name.includes('enhanced')
         );
     });
     
     const otherVoices = allVoices.filter(voice => 
-        !sinhalaVoices.includes(voice) && !fallbackVoices.includes(voice)
+        !englishVoices.includes(voice) && !qualityVoices.includes(voice)
     );
     
-    // Add Sinhala voices
-    if (sinhalaVoices.length > 0) {
+    // Add English voices
+    if (englishVoices.length > 0) {
         const group = document.createElement('optgroup');
-        group.label = '🇱🇰 Sinhala Voices (Best)';
-        sinhalaVoices.forEach((voice, index) => {
+        group.label = '�� English Voices (Best)';
+        englishVoices.forEach((voice, index) => {
             const option = document.createElement('option');
-            option.value = `sinhala_${index}`;
+            option.value = `english_${index}`;
             option.textContent = `${voice.name} (${voice.lang}) ${voice.localService ? '📱' : '☁️'}`;
             option.dataset.voice = JSON.stringify(voice);
             group.appendChild(option);
@@ -261,13 +289,13 @@ function populateVoiceSelect() {
         voiceSelect.appendChild(group);
     }
     
-    // Add fallback voices
-    if (fallbackVoices.length > 0) {
+    // Add quality voices
+    if (qualityVoices.length > 0) {
         const group = document.createElement('optgroup');
-        group.label = '🔄 Related Languages (Good)';
-        fallbackVoices.slice(0, 10).forEach((voice, index) => {
+        group.label = '⭐ Premium Voices (Great)';
+        qualityVoices.slice(0, 10).forEach((voice, index) => {
             const option = document.createElement('option');
-            option.value = `fallback_${index}`;
+            option.value = `quality_${index}`;
             option.textContent = `${voice.name} (${voice.lang}) ${voice.localService ? '📱' : '☁️'}`;
             option.dataset.voice = JSON.stringify(voice);
             group.appendChild(option);
@@ -287,21 +315,22 @@ function populateVoiceSelect() {
             group.appendChild(option);
         });
         voiceSelect.appendChild(group);
-    }
-    
-    // Auto-select best voice
-    if (sinhalaVoices.length > 0) {
-        voiceSelect.selectedIndex = 1; // First Sinhala voice (after group header)
+    }    // Auto-select best voice
+    if (englishVoices.length > 0) {
+        voiceSelect.selectedIndex = 1; // First English voice (after group header)
         updateVoiceInfo();
     }
+    
+    // Apply custom styling for better visibility
+    setTimeout(styleSelectOptions, 100);
 }
 
 // Enhanced status display
 function updateVoiceStatus() {
     const allVoices = speechSynthesis.getVoices();
-    const sinhalaVoices = allVoices.filter(voice => 
-        voice.lang.toLowerCase().includes('si') || 
-        voice.name.toLowerCase().includes('sinhala')
+    const englishVoices = allVoices.filter(voice => 
+        voice.lang.toLowerCase().includes('en') || 
+        voice.name.toLowerCase().includes('english')
     );
     
     const statusCard = document.getElementById('statusCard');
@@ -311,21 +340,21 @@ function updateVoiceStatus() {
     
     statusCard.classList.remove('hidden');
     
-    if (sinhalaVoices.length > 0) {
+    if (englishVoices.length > 0) {
         statusIcon.className = 'w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-xl';
         statusIcon.innerHTML = '✅';
-        statusTitle.textContent = 'සිංහල හඬ ලබා ගත හැක!';
-        statusMessage.textContent = `${sinhalaVoices.length} Sinhala voice(s) detected. Perfect for Sinhala text!`;
+        statusTitle.textContent = 'English Voices Available!';
+        statusMessage.textContent = `${englishVoices.length} English voice(s) detected. Perfect for English text!`;
     } else if (voices.length > 0) {
         statusIcon.className = 'w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center text-xl';
         statusIcon.innerHTML = '⚠️';
-        statusTitle.textContent = 'විකල්ප හඬ භාවිතා වේ';
-        statusMessage.textContent = `${voices.length} alternative voice(s) available. Quality may vary for Sinhala text.`;
+        statusTitle.textContent = 'Alternative Voices Available';
+        statusMessage.textContent = `${voices.length} alternative voice(s) available. Quality may vary for English text.`;
     } else {
         statusIcon.className = 'w-12 h-12 bg-red-500 rounded-full flex items-center justify-center text-xl';
         statusIcon.innerHTML = '❌';
-        statusTitle.textContent = 'හඬ නොමැත';
-        statusMessage.textContent = 'No voices detected. Please install Sinhala language pack and restart browser.';
+        statusTitle.textContent = 'No Voices Available';
+        statusMessage.textContent = 'No voices detected. Please check your browser settings and restart.';
     }
 }
 
@@ -353,10 +382,14 @@ function updateVoiceInfo() {
 }
 
 // Enhanced event listeners
-function setupEventListeners() {
-    // Text input with real-time feedback
+function setupEventListeners() {    // Text input with real-time feedback
     const textInput = document.getElementById('textInput');
     const charCount = document.getElementById('charCount');
+    
+    if (!textInput || !charCount) {
+        console.error('❌ Critical UI elements not found');
+        return;
+    }
     
     textInput.addEventListener('input', function() {
         const count = this.value.length;
@@ -364,7 +397,10 @@ function setupEventListeners() {
         
         // Update speak button state
         const speakBtn = document.getElementById('speakBtn');
-        speakBtn.disabled = count === 0 || !isSupported;
+        if (speakBtn) {
+            speakBtn.disabled = count === 0 || !isSupported;
+            console.log(`🔘 Speak button enabled: ${!speakBtn.disabled}`);
+        }
         
         // Word count for longer texts
         if (count > 100) {
@@ -445,17 +481,31 @@ function setSampleText(sampleKey) {
 
 // Revolutionary speech synthesis
 function speakText() {
-    const text = document.getElementById('textInput').value.trim();
+    console.log('🎯 speakText() function called');
+    
+    const textInput = document.getElementById('textInput');
+    if (!textInput) {
+        console.error('❌ Text input element not found');
+        showNotification('Text input element not found', 'error');
+        return;
+    }
+    
+    const text = textInput.value.trim();
+    console.log('📝 Text to speak:', text);
     
     if (!text) {
-        showNotification('කරුණාකර පාඨයක් ඇතුළත් කරන්න | Please enter text to speak', 'warning');
+        console.log('⚠️ No text provided');
+        showNotification('Please enter text to speak', 'warning');
         return;
     }
     
     if (!isSupported) {
+        console.error('❌ Speech synthesis not supported');
         showNotification('Your browser does not support Text-to-Speech', 'error');
         return;
     }
+    
+    console.log('✅ All checks passed, proceeding with speech synthesis');
     
     // Stop any current speech
     stopSpeaking();
@@ -479,13 +529,12 @@ function speakText() {
             console.log('🤖 Auto-selected voice:', bestVoice.name);
         }
     }
-    
-    // Enhanced speech parameters
+      // Enhanced speech parameters
     const rate = parseFloat(document.getElementById('rateSlider').value);
     currentUtterance.rate = rate;
     currentUtterance.pitch = 1.0;
     currentUtterance.volume = 1.0;
-    currentUtterance.lang = 'si-LK';
+    currentUtterance.lang = 'en-US'; // Set to English
     
     // Advanced event handlers
     setupSpeechEvents(text);
@@ -509,15 +558,12 @@ function speakText() {
 // Get best available voice
 function getBestVoice() {
     const allVoices = speechSynthesis.getVoices();
-    
-    // Priority order
+      // Priority order
     const priorities = [
-        // Sinhala voices
-        voice => voice.lang.toLowerCase().includes('si') || voice.name.toLowerCase().includes('sinhala'),
-        // Regional voices
-        voice => voice.lang.toLowerCase().includes('ta') || voice.lang.toLowerCase().includes('hi'),
-        // Quality English voices
-        voice => voice.name.toLowerCase().includes('google') && voice.lang.toLowerCase().includes('en'),
+        // English voices
+        voice => voice.lang.toLowerCase().includes('en') || voice.name.toLowerCase().includes('english'),
+        // Quality voices
+        voice => voice.name.toLowerCase().includes('google') || voice.name.toLowerCase().includes('chrome'),
         // Any voice
         voice => true
     ];
@@ -537,7 +583,7 @@ function setupSpeechEvents(text) {
     currentUtterance.onstart = function() {
         console.log('🎙️ Speech started');
         updateButtonStates('speaking');
-        updateProgress('කථනය කරමින්... | Speaking...', 0);
+        updateProgress('Speaking...', 0);
         
         // Smart progress estimation
         const estimatedDuration = (text.length / 10) * (2 - parseFloat(document.getElementById('rateSlider').value)) * 1000;
@@ -547,7 +593,7 @@ function setupSpeechEvents(text) {
             if (speechSynthesis.speaking && !speechSynthesis.paused) {
                 progress += (100 / (estimatedDuration / 100));
                 if (progress <= 95) {
-                    updateProgress('කථනය කරමින්... | Speaking...', Math.min(progress, 95));
+                    updateProgress('Speaking...', Math.min(progress, 95));
                 }
             }
         }, 100);
@@ -556,8 +602,7 @@ function setupSpeechEvents(text) {
     currentUtterance.onend = function() {
         console.log('✅ Speech completed');
         clearInterval(progressInterval);
-        updateButtonStates('idle');
-        updateProgress('සම්පූර්ණයි | Completed', 100);
+        updateButtonStates('idle');        updateProgress('Completed', 100);
         setTimeout(() => updateProgress('Ready', 0), 2000);
         showNotification('Speech completed successfully!', 'success');
     };
@@ -572,7 +617,7 @@ function setupSpeechEvents(text) {
             'not-allowed': 'Speech not allowed. Please check permissions.',
             'network': 'Network error. Check your connection.',
             'synthesis-failed': 'Speech synthesis failed. Try another voice.',
-            'language-not-supported': 'Language not supported. Install Sinhala language pack.'
+            'language-not-supported': 'Language not supported. Please try a different voice.'
         };
         
         const message = errorMessages[event.error] || 'An error occurred during speech synthesis.';
@@ -620,7 +665,7 @@ function pauseResumeSpeaking() {
 // Test current voice
 function testCurrentVoice() {
     const voiceSelect = document.getElementById('voiceSelect');
-    const testText = 'ආයුබෝවන්. මේ හඬ පරීක්ෂණයකි.';
+    const testText = 'Hello! This is a voice test. How do you like this voice?';
     
     if (voiceSelect.value) {
         const originalText = document.getElementById('textInput').value;
@@ -656,17 +701,16 @@ function updateButtonStates(state) {
         btn.classList.remove('opacity-50', 'cursor-not-allowed');
     });
     
-    switch (state) {
-        case 'speaking':
+    switch (state) {        case 'speaking':
             speakBtn.disabled = true;
             pauseIcon.className = 'fas fa-pause';
-            pauseText.textContent = 'විරාම';
+            pauseText.textContent = 'Pause';
             break;
             
         case 'paused':
             speakBtn.disabled = true;
             pauseIcon.className = 'fas fa-play';
-            pauseText.textContent = 'දිගටම';
+            pauseText.textContent = 'Resume';
             break;
             
         case 'idle':
@@ -676,7 +720,7 @@ function updateButtonStates(state) {
             stopBtn.disabled = true;
             pauseBtn.disabled = true;
             pauseIcon.className = 'fas fa-pause';
-            pauseText.textContent = 'විරාම';
+            pauseText.textContent = 'Pause';
             break;
     }
     
@@ -698,13 +742,13 @@ function updateProgress(text, percentage) {
 
 function updateStatistics() {
     const allVoices = speechSynthesis.getVoices();
-    const sinhalaVoices = allVoices.filter(voice => 
-        voice.lang.toLowerCase().includes('si') || 
-        voice.name.toLowerCase().includes('sinhala')
+    const englishVoices = allVoices.filter(voice => 
+        voice.lang.toLowerCase().includes('en') || 
+        voice.name.toLowerCase().includes('english')
     );
     
     document.getElementById('totalVoicesCount').textContent = allVoices.length;
-    document.getElementById('sinhalaVoicesCount').textContent = sinhalaVoices.length;
+    document.getElementById('englishVoicesCount').textContent = englishVoices.length;
     document.getElementById('speechCount').textContent = speechCount;
     document.getElementById('totalCharsSpoken').textContent = totalCharsSpoken.toLocaleString();
 }
@@ -756,12 +800,11 @@ const debugTools = {
             default: voice.default
         })));
     },
-    
-    analyzeVoices() {
+      analyzeVoices() {
         const allVoices = speechSynthesis.getVoices();
         const analysis = {
             total: allVoices.length,
-            sinhala: allVoices.filter(v => v.lang.toLowerCase().includes('si')).length,
+            english: allVoices.filter(v => v.lang.toLowerCase().includes('en')).length,
             local: allVoices.filter(v => v.localService).length,
             remote: allVoices.filter(v => !v.localService).length,
             languages: [...new Set(allVoices.map(v => v.lang))].sort()
@@ -770,14 +813,14 @@ const debugTools = {
         return analysis;
     },
     
-    testSinhalaVoices() {
-        const sinhalaVoices = speechSynthesis.getVoices().filter(v => 
-            v.lang.toLowerCase().includes('si') || 
-            v.name.toLowerCase().includes('sinhala')
+    testEnglishVoices() {
+        const englishVoices = speechSynthesis.getVoices().filter(v => 
+            v.lang.toLowerCase().includes('en') || 
+            v.name.toLowerCase().includes('english')
         );
         
-        console.log(`Found ${sinhalaVoices.length} Sinhala voices:`);
-        sinhalaVoices.forEach(voice => {
+        console.log(`Found ${englishVoices.length} English voices:`);
+        englishVoices.forEach(voice => {
             console.log(`- ${voice.name} (${voice.lang})`);
         });
     },
@@ -792,7 +835,97 @@ const debugTools = {
 // Export debug tools
 window.ttsDebug = debugTools;
 
+// Simple test function to verify TTS is working
+function testTTS() {
+    console.log('🧪 Testing TTS functionality...');
+    
+    if (!window.speechSynthesis) {
+        console.error('❌ SpeechSynthesis not available');
+        return false;
+    }
+    
+    const testUtterance = new SpeechSynthesisUtterance('Hello, this is a test.');
+    testUtterance.lang = 'en-US';
+    testUtterance.rate = 1;
+    testUtterance.pitch = 1;
+    testUtterance.volume = 1;
+    
+    testUtterance.onstart = () => console.log('✅ TTS Test started successfully');
+    testUtterance.onend = () => console.log('✅ TTS Test completed successfully');
+    testUtterance.onerror = (e) => console.error('❌ TTS Test failed:', e);
+    
+    try {
+        speechSynthesis.speak(testUtterance);
+        console.log('📢 TTS test utterance sent to synthesis');
+        return true;
+    } catch (error) {
+        console.error('❌ Error in TTS test:', error);
+        return false;
+    }
+}
+
+// Add debug button for testing
+function addDebugButton() {
+    const debugButton = document.createElement('button');
+    debugButton.textContent = '🧪 Test TTS';
+    debugButton.className = 'fixed bottom-4 right-4 px-4 py-2 bg-red-500 text-white rounded-lg z-50';
+    debugButton.onclick = testTTS;
+    document.body.appendChild(debugButton);
+    console.log('🛠️ Debug button added');
+}
+
+// Enhanced select styling function
+function styleSelectOptions() {
+    const voiceSelect = document.getElementById('voiceSelect');
+    if (!voiceSelect) return;
+    
+    // Apply enhanced dark theme styling
+    voiceSelect.style.cssText = `
+        background-color: rgba(30, 30, 30, 0.95) !important;
+        color: white !important;
+        border: 2px solid rgba(255, 255, 255, 0.3) !important;
+        font-size: 14px !important;
+        font-family: 'Inter', 'Poppins', system-ui, sans-serif !important;
+    `;
+    
+    // Enhanced option styling
+    Array.from(voiceSelect.options).forEach((option, index) => {
+        option.style.cssText = `
+            background-color: rgba(30, 30, 30, 0.98) !important;
+            color: ${option.value ? 'white' : '#94a3b8'} !important;
+            padding: 12px 16px !important;
+            font-size: 14px !important;
+            border: none !important;
+        `;
+        
+        // Add hover effect through JavaScript since CSS might not work
+        option.addEventListener('mouseover', function() {
+            this.style.backgroundColor = 'rgba(59, 130, 246, 0.4) !important';
+        });
+        
+        option.addEventListener('mouseout', function() {
+            this.style.backgroundColor = 'rgba(30, 30, 30, 0.98) !important';
+        });
+    });
+    
+    // Enhanced optgroup styling
+    Array.from(voiceSelect.querySelectorAll('optgroup')).forEach(optgroup => {
+        optgroup.style.cssText = `
+            background-color: rgba(15, 15, 15, 0.99) !important;
+            color: #60a5fa !important;
+            font-weight: bold !important;
+            font-size: 13px !important;
+            padding: 8px 12px !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        `;
+    });
+    
+    console.log('🎨 Select dropdown enhanced with better visibility');
+}
+
 // Initialize page
-console.log('🎯 Modern Sinhala TTS App loaded successfully!');
+console.log('🎯 Modern English TTS App loaded successfully!');
 console.log('🛠️ Debug tools: window.ttsDebug');
-console.log('📊 Available methods: listAllVoices, analyzeVoices, testSinhalaVoices, forceReload');
+console.log('📊 Available methods: listAllVoices, analyzeVoices, testEnglishVoices, forceReload');
+
+styleSelectOptions();

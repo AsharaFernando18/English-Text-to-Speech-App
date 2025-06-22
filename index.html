@@ -1,24 +1,27 @@
 <!DOCTYPE html>
-<html lang="si">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>සිංහල TTS | Modern Sinhala Text-to-Speech</title>
+    <meta name="viewport" content="width=device-width,                     <textarea 
+                        id="textInput" 
+                        placeholder="Type your English text here... ✍️"
+                        class="w-full h-48 p-4 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/60 modern-font text-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-transparent transition-all duration-300"
+                    >Hello! Welcome to our English Text-to-Speech application. Click the Speak button to hear this text.</textarea>al-scale=1.0">
+    <title>English TTS | Modern Text-to-Speech Application</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Google Fonts - Better Sinhala fonts -->
+    <!-- Google Fonts - Modern English fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@100;200;300;400;500;600;700;800;900&family=Iskoola+Pota&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <!-- Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    
-    <style>
-        .sinhala-font {
-            font-family: 'Noto Sans Sinhala', 'Iskoola Pota', sans-serif;
+      <style>
+        .modern-font {
+            font-family: 'Inter', 'Poppins', system-ui, sans-serif;
             font-feature-settings: "kern" 1, "liga" 1;
         }
         
@@ -50,6 +53,92 @@
             transform: translateY(-2px);
             box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
         }
+        
+        .pulse-ring {
+            animation: pulse-ring 1.25s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+          @keyframes pulse-ring {
+            0% {
+                transform: scale(0.33);
+            }
+            80%, 100% {
+                opacity: 0;
+            }
+        }
+          /* Custom dropdown styling */
+        #voiceSelect {
+            background-color: rgba(30, 30, 30, 0.9) !important;
+            color: white !important;
+            border: 1px solid rgba(255, 255, 255, 0.3) !important;
+            border-radius: 8px !important;
+        }
+        
+        #voiceSelect option {
+            background-color: rgba(30, 30, 30, 0.95) !important;
+            color: white !important;
+            padding: 10px 15px !important;
+            border: none !important;
+        }
+        
+        #voiceSelect optgroup {
+            background-color: rgba(20, 20, 20, 0.98) !important;
+            color: #60a5fa !important;
+            font-weight: bold !important;
+            padding: 5px 10px !important;
+        }
+        
+        #voiceSelect option:hover {
+            background-color: rgba(59, 130, 246, 0.4) !important;
+        }
+        
+        #voiceSelect option:checked,
+        #voiceSelect option:focus {
+            background-color: rgba(59, 130, 246, 0.6) !important;
+        }
+        
+        /* Webkit specific styles */
+        #voiceSelect::-webkit-scrollbar {
+            width: 12px;
+        }
+        
+        #voiceSelect::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+        }
+        
+        #voiceSelect::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+        }
+        
+        #voiceSelect::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+          /* Range slider styling */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+            box-shadow: 0 0 6px rgba(102, 126, 234, 0.5);
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 6px rgba(102, 126, 234, 0.5);
+        }
     </style>
 </head>
 
@@ -61,9 +150,8 @@
                 <div class="flex items-center space-x-4">
                     <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
                         <i class="fas fa-volume-up text-white text-xl"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-2xl font-bold text-white sinhala-font">සිංහල TTS</h1>
+                    </div>                    <div>
+                        <h1 class="text-2xl font-bold text-white modern-font">English TTS</h1>
                         <p class="text-white/80 text-sm">Modern Text to Speech</p>
                     </div>
                 </div>
@@ -99,12 +187,11 @@
         <div class="grid lg:grid-cols-3 gap-8">
             <!-- Left Column: Text Input -->
             <div class="lg:col-span-2 space-y-6">
-                <!-- Text Input Card -->
-                <div class="glass-effect rounded-2xl p-6 border border-white/20 card-hover">
+                <!-- Text Input Card -->                <div class="glass-effect rounded-2xl p-6 border border-white/20 card-hover">
                     <div class="flex items-center justify-between mb-4">
-                        <h2 class="text-xl font-semibold text-white sinhala-font">
+                        <h2 class="text-xl font-semibold text-white modern-font">
                             <i class="fas fa-edit text-blue-300 mr-2"></i>
-                            පාඨය ඇතුළත් කරන්න
+                            Enter Your Text
                         </h2>
                         <div class="flex items-center space-x-2">
                             <span id="charCount" class="text-white/60 text-sm">0 characters</span>
@@ -116,8 +203,8 @@
                     
                     <textarea 
                         id="textInput" 
-                        placeholder="සිංහල පාඨය මෙහි ටයිප් කරන්න... 🇱🇰"
-                        class="w-full h-48 p-4 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/60 sinhala-font text-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-transparent transition-all duration-300"
+                        placeholder="Type your English text here... �️"
+                        class="w-full h-48 p-4 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/60 modern-font text-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-transparent transition-all duration-300"
                     ></textarea>
                     
                     <!-- Quick Sample Buttons -->
@@ -128,34 +215,33 @@
                         </p>
                         <div class="flex flex-wrap gap-2">
                             <button onclick="setSampleText('sample1')" 
-                                    class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-300 sinhala-font text-sm">
-                                <i class="fas fa-sun text-yellow-300 mr-1"></i>සුභ උදෑසනක්
+                                    class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-300 modern-font text-sm">
+                                <i class="fas fa-sun text-yellow-300 mr-1"></i>Good Morning
                             </button>
                             <button onclick="setSampleText('sample2')" 
-                                    class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-300 sinhala-font text-sm">
-                                <i class="fas fa-heart text-red-300 mr-1"></i>ඔබට කෙසේද?
+                                    class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-300 modern-font text-sm">
+                                <i class="fas fa-heart text-red-300 mr-1"></i>How are you?
                             </button>
                             <button onclick="setSampleText('sample3')" 
-                                    class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-300 sinhala-font text-sm">
-                                <i class="fas fa-hands text-green-300 mr-1"></i>ස්තූතියි
+                                    class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-300 modern-font text-sm">
+                                <i class="fas fa-hands text-green-300 mr-1"></i>Thank you
                             </button>
                             <button onclick="setSampleText('sample4')" 
-                                    class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-300 sinhala-font text-sm">
-                                <i class="fas fa-flag text-blue-300 mr-1"></i>ශ්‍රී ලංකාව
+                                    class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-300 modern-font text-sm">
+                                <i class="fas fa-globe text-blue-300 mr-1"></i>Welcome
                             </button>
                             <button onclick="setSampleText('sample5')" 
-                                    class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-300 sinhala-font text-sm">
-                                <i class="fas fa-graduation-cap text-purple-300 mr-1"></i>දීර්ඝ කතාව
+                                    class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-300 modern-font text-sm">
+                                <i class="fas fa-graduation-cap text-purple-300 mr-1"></i>Long Text
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Controls Card -->
-                <div class="glass-effect rounded-2xl p-6 border border-white/20 card-hover">
-                    <h3 class="text-lg font-semibold text-white mb-4 sinhala-font">
+                <!-- Controls Card -->                <div class="glass-effect rounded-2xl p-6 border border-white/20 card-hover">
+                    <h3 class="text-lg font-semibold text-white mb-4 modern-font">
                         <i class="fas fa-sliders-h text-purple-300 mr-2"></i>
-                        පාලන මධ්‍යස්ථානය
+                        Control Center
                     </h3>
                     
                     <!-- Control Buttons -->
@@ -163,19 +249,19 @@
                         <button id="speakBtn" onclick="speakText()" 
                                 class="btn-primary text-white px-6 py-3 rounded-xl font-medium flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed">
                             <i class="fas fa-play"></i>
-                            <span class="sinhala-font">කථනය</span>
+                            <span class="modern-font">Speak</span>
                         </button>
                         
                         <button id="pauseBtn" onclick="pauseResumeSpeaking()" 
                                 class="px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center space-x-2">
                             <i id="pauseIcon" class="fas fa-pause"></i>
-                            <span id="pauseText" class="sinhala-font">විරාම</span>
+                            <span id="pauseText" class="modern-font">Pause</span>
                         </button>
                         
                         <button id="stopBtn" onclick="stopSpeaking()" 
                                 class="px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center space-x-2">
                             <i class="fas fa-stop"></i>
-                            <span class="sinhala-font">නවත්වන්න</span>
+                            <span>Stop</span>
                         </button>
                         
                         <button id="downloadBtn" onclick="downloadAudio()" 
@@ -210,17 +296,15 @@
 
             <!-- Right Column: Voice Settings -->
             <div class="space-y-6">
-                <!-- Voice Selection Card -->
-                <div class="glass-effect rounded-2xl p-6 border border-white/20 card-hover">
-                    <h3 class="text-lg font-semibold text-white mb-4 sinhala-font">
+                <!-- Voice Selection Card -->                <div class="glass-effect rounded-2xl p-6 border border-white/20 card-hover">
+                    <h3 class="text-lg font-semibold text-white mb-4 modern-font">
                         <i class="fas fa-microphone text-green-300 mr-2"></i>
-                        හඬ තෝරන්න
+                        Voice Selection
                     </h3>
                     
-                    <div class="space-y-4">
-                        <div>
+                    <div class="space-y-4">                        <div>
                             <label class="block text-white/80 text-sm mb-2">Available Voices:</label>
-                            <select id="voiceSelect" class="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400/50">
+                            <select id="voiceSelect" class="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400/50 modern-font">
                                 <option value="">🔄 Loading voices...</option>
                             </select>
                         </div>
@@ -245,8 +329,7 @@
                     </div>
                 </div>
 
-                <!-- Voice Setup Help -->
-                <div class="glass-effect rounded-2xl p-6 border border-white/20 card-hover">
+                <!-- Voice Setup Help -->                <div class="glass-effect rounded-2xl p-6 border border-white/20 card-hover">
                     <h3 class="text-lg font-semibold text-white mb-4">
                         <i class="fas fa-question-circle text-orange-300 mr-2"></i>
                         Voice Setup Help
@@ -257,15 +340,15 @@
                             <i class="fas fa-chrome text-blue-400 mt-1"></i>
                             <div>
                                 <p class="font-medium text-white">Chrome Setup:</p>
-                                <p>Settings → Languages → Add Sinhala</p>
+                                <p>Best browser for TTS functionality</p>
                             </div>
                         </div>
                         
                         <div class="flex items-start space-x-3">
                             <i class="fab fa-windows text-blue-400 mt-1"></i>
                             <div>
-                                <p class="font-medium text-white">Windows Setup:</p>
-                                <p>Settings → Language → Add Sinhala</p>
+                                <p class="font-medium text-white">Windows:</p>
+                                <p>Built-in voices available</p>
                             </div>
                         </div>
                         
@@ -273,12 +356,11 @@
                             <i class="fas fa-mobile-alt text-green-400 mt-1"></i>
                             <div>
                                 <p class="font-medium text-white">Mobile:</p>
-                                <p>Works best on Chrome Android</p>
+                                <p>Works on all modern browsers</p>
                             </div>
                         </div>
                     </div>
-                    
-                    <button onclick="window.ttsDebug.checkVoiceCapabilities()" 
+                      <button onclick="window.ttsDebug.analyzeVoices()" 
                             class="w-full mt-4 px-4 py-2 bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 rounded-lg transition-all duration-300 flex items-center justify-center space-x-2">
                         <i class="fas fa-search"></i>
                         <span>Analyze Voices</span>
@@ -292,14 +374,13 @@
                         Statistics
                     </h3>
                     
-                    <div class="space-y-3">
-                        <div class="flex justify-between items-center">
+                    <div class="space-y-3">                        <div class="flex justify-between items-center">
                             <span class="text-white/80 text-sm">Total Voices:</span>
                             <span id="totalVoicesCount" class="text-white font-medium">0</span>
                         </div>
                         <div class="flex justify-between items-center">
-                            <span class="text-white/80 text-sm">Sinhala Voices:</span>
-                            <span id="sinhalaVoicesCount" class="text-white font-medium">0</span>
+                            <span class="text-white/80 text-sm">English Voices:</span>
+                            <span id="englishVoicesCount" class="text-white font-medium">0</span>
                         </div>
                         <div class="flex justify-between items-center">
                             <span class="text-white/80 text-sm">Speeches Made:</span>
@@ -317,11 +398,10 @@
 
     <!-- Footer -->
     <footer class="glass-effect border-t border-white/20 mt-12">
-        <div class="max-w-6xl mx-auto px-6 py-6">
-            <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+        <div class="max-w-6xl mx-auto px-6 py-6">            <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
                 <div class="text-center md:text-left">
-                    <p class="text-white/80 sinhala-font">❤️ සිංහල ප්‍රජාව සඳහා නිර්මාණය කර ඇත</p>
-                    <p class="text-white/60 text-sm">Built with modern web technologies</p>
+                    <p class="text-white/80 modern-font">❤️ Built with love for everyone</p>
+                    <p class="text-white/60 text-sm">Powered by modern web technologies</p>
                 </div>
                 <div class="flex items-center space-x-4">
                     <span class="text-white/60 text-sm">Keyboard Shortcuts:</span>
@@ -335,6 +415,6 @@
         </div>
     </footer>
 
-    <script src="app_new.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
