@@ -1,23 +1,17 @@
-# English Text-to-Speech App
+# සිංහල පාඨ-කථන යෙදුම | Sinhala Text-to-Speech App
 
-A **100% free** web-based English Text-to-Speech application1. **Open the application** in your web browser
-2. **Check voice status** - the app will show if English voices are available
-3. **Select a voice** from the dropdown (if multiple available)
-4. **Enter English text** in the text area or use sample buttons
-5. **Adjust speech rate** using the slider (0.1x to 2.0x)
-6. **Click "Speak"** to start text-to-speech
-7. **Use controls** to pause, resume, or stop playbackwith vanilla HTML, JavaScript, and Tailwind CSS. No external APIs required!
+A **100% free** web-based Sinhala Text-to-Speech application built with vanilla HTML, JavaScript, and Tailwind CSS. No external APIs required!
 
 ## 🌟 Features
 
 - **Free & Open Source**: No paid APIs or subscriptions
-- **English Support**: Automatically detects and uses English voices
+- **Sinhala Support**: Automatically detects and uses Sinhala voices
 - **Responsive Design**: Works on desktop, tablet, and mobile
 - **Browser-Based**: Uses native Web Speech API
-- **Beautiful UI**: Clean design with Tailwind CSS and modern fonts (Inter, Poppins)
+- **Beautiful UI**: Clean design with Tailwind CSS and Noto Sans Sinhala font
 - **Real-time Controls**: Play, pause, stop, and speed control
-- **Sample Texts**: Quick access to common English phrases
-- **Voice Selection**: Choose from available English voices
+- **Sample Texts**: Quick access to common Sinhala phrases
+- **Voice Selection**: Choose from available Sinhala voices
 - **Progress Tracking**: Visual feedback during speech playback
 
 ## 🚀 Live Demo
@@ -29,22 +23,22 @@ Simply open `index.html` in your browser to start using the app!
 - **HTML5**: Semantic markup structure
 - **CSS3**: Styling with Tailwind CSS framework
 - **JavaScript (ES6+)**: Speech Synthesis API integration
-- **Google Fonts**: Inter and Poppins for modern English text rendering
+- **Google Fonts**: Noto Sans Sinhala for proper Sinhala text rendering
 
 ## 📋 Browser Compatibility
 
-| Browser | Desktop | Mobile | English Voice Support |
+| Browser | Desktop | Mobile | Sinhala Voice Support |
 |---------|---------|--------|----------------------|
-| **Chrome** | ✅ Excellent | ✅ Excellent | ✅ Best (native support) |
-| **Edge** | ✅ Very Good | ✅ Good | ✅ Excellent |
-| **Firefox** | ✅ Good | ✅ Good | ✅ Good |
-| **Safari** | ✅ Good | ✅ Good | ✅ Good |
+| **Chrome** | ✅ Excellent | ✅ Excellent | ✅ Best (with language pack) |
+| **Edge** | ✅ Very Good | ✅ Good | ✅ Good |
+| **Firefox** | ✅ Good | ✅ Good | ⚠️ Limited |
+| **Safari** | ✅ Good | ✅ Good | ⚠️ Limited |
 
 ### 🎯 Best Experience Tips:
 
-1. **Use Google Chrome or Microsoft Edge** for the best English voice support
-2. **Ensure system volume is up** and speakers/headphones are working
-3. **Allow browser permissions** if prompted for audio playback
+1. **Use Google Chrome** for the best Sinhala voice support
+2. **Install Sinhala Language Pack** in your operating system
+3. **Enable microphone permissions** if prompted (not required for TTS)
 4. **Use latest browser versions** for optimal performance
 
 ## 🔧 Setup & Installation
@@ -88,20 +82,20 @@ php -S localhost:8000
 ```bash
 git init
 git add .
-git commit -m "Initial commit: English TTS App"
+git commit -m "Initial commit: Sinhala TTS App"
 git branch -M main
-git remote add origin https://github.com/yourusername/english-tts.git
+git remote add origin https://github.com/yourusername/sinhala-tts.git
 git push -u origin main
 ```
 
 ## 📖 How to Use
 
 1. **Open the application** in your web browser
-2. **Check voice status** - the app will show if English voices are available
+2. **Check voice status** - the app will show if Sinhala voices are available
 3. **Select a voice** from the dropdown (if multiple available)
-4. **Enter English text** in the text area or use sample buttons
+4. **Enter Sinhala text** in the text area or use sample buttons
 5. **Adjust speech rate** using the slider (0.1x to 2.0x)
-6. **Click "Speak"** to start text-to-speech
+6. **Click "කථනය කරන්න" (Speak)** to start text-to-speech
 7. **Use controls** to pause, resume, or stop playback
 
 ### 🎮 Keyboard Shortcuts:
@@ -115,19 +109,18 @@ git push -u origin main
 ```javascript
 // The app uses browser's native Speech Synthesis API
 const utterance = new SpeechSynthesisUtterance(text);
-utterance.voice = selectedEnglishVoice;
+utterance.voice = selectedSinhalaVoice;
 utterance.rate = userSelectedRate;
-utterance.lang = 'en-US';
 speechSynthesis.speak(utterance);
 ```
 
-### English Voice Detection
+### Sinhala Voice Detection
 ```javascript
-// Filters voices for English support
-const englishVoices = allVoices.filter(voice => {
-    return voice.lang.includes('en') || 
-           voice.lang.includes('english') ||
-           voice.name.toLowerCase().includes('english');
+// Filters voices for Sinhala support
+const sinhalaVoices = allVoices.filter(voice => {
+    return voice.lang.includes('si') || 
+           voice.lang.includes('sinhala') ||
+           voice.name.toLowerCase().includes('sinhala');
 });
 ```
 
@@ -144,10 +137,10 @@ const englishVoices = allVoices.filter(voice => {
 ```javascript
 // Edit the sampleTexts object in app.js
 const sampleTexts = {
-    sample1: 'Good morning!',
-    sample2: 'How are you today?',
+    sample1: 'සුභ උදෑසනක්!',
+    sample2: 'ඔබට කෙසේද?',
     // Add your custom samples here
-    sample5: 'Your new English text here'
+    sample5: 'Your new Sinhala text here'
 };
 ```
 
@@ -160,9 +153,9 @@ const sampleTexts = {
 ```javascript
 // Modify the voice filtering logic in loadVoices()
 voices = allVoices.filter(voice => {
-    return voice.lang.includes('en') || 
-           voice.lang.includes('es') || // Spanish
-           voice.lang.includes('fr');   // French
+    return voice.lang.includes('si') || 
+           voice.lang.includes('ta') || // Tamil
+           voice.lang.includes('hi');   // Hindi
 });
 ```
 
@@ -170,11 +163,11 @@ voices = allVoices.filter(voice => {
 
 ### Common Issues:
 
-**1. No English Voice Available**
-- **Windows 10/11**: English voices should be available by default
-- **Chrome**: Best browser for TTS support with multiple English voices
-- **Alternative**: Try Microsoft Edge which has excellent Windows integration
-- **Check**: Run `window.ttsDebug.analyzeVoices()` in browser console
+**1. No Sinhala Voice Available**
+- **Windows 10/11**: Settings → Time & Language → Language → Add "Sinhala (Sri Lanka)"
+- **Chrome**: Settings → Languages → Add "Sinhala" → Restart browser
+- **Alternative**: Use Chrome browser which has better Unicode support
+- **Check**: Run `window.ttsDebug.checkVoiceCapabilities()` in browser console
 
 **2. Text Not Speaking**
 - Ensure browser supports Speech Synthesis API
@@ -182,21 +175,21 @@ voices = allVoices.filter(voice => {
 - Verify browser permissions (some browsers require user interaction first)
 - Try clicking the page first, then use the speak button
 
-**3. Voice Quality Issues**
+**3. Voice Sounds Wrong or Robotic**
+- Install proper Sinhala language pack in your OS
 - Try different voices from the dropdown
 - Adjust speech rate (slower often sounds better)
-- Use Chrome or Edge for highest quality voices
-- Ensure device volume is up and not muted
+- Ensure Sinhala text is properly encoded (UTF-8)
 
 **4. Mobile Issues**
-- **Android**: Use Chrome browser for best results
-- **iOS**: Use Safari, ensure device is not on silent mode
+- **Android**: Use Chrome browser, ensure Sinhala keyboard is installed
+- **iOS**: Use Safari, go to Settings → General → Language & Region
 - Ensure device volume is up and not on silent mode
 - Try reloading the page if voices don't load initially
 
 **5. Voices Not Loading**
 - Refresh the page and wait a few seconds
-- Try `window.ttsDebug.forceReload()` in console
+- Try `window.ttsDebug.forceReloadVoices()` in console
 - Clear browser cache and reload
 - Check internet connection (some voices are cloud-based)
 
@@ -206,47 +199,43 @@ voices = allVoices.filter(voice => {
 ```javascript
 // Open browser console (F12) and run:
 window.ttsDebug.listAllVoices();        // List all available voices
-window.ttsDebug.analyzeVoices();        // Analyze English voice support
-window.ttsDebug.testEnglishVoices();    // Test English voices
-window.ttsDebug.forceReload();          // Force reload voices
+window.ttsDebug.checkVoiceCapabilities(); // Analyze Sinhala support
+window.ttsDebug.testSinhalaText();      // Load test text
+window.ttsDebug.forceReloadVoices();    // Force reload voices
 ```
 
 **Common Voice Issues:**
 - **"No voices found"**: Browser needs time to load voices, refresh page
-- **"Synthesis failed"**: Try a different voice from the dropdown
+- **"Synthesis failed"**: Language pack missing, install Sinhala support
 - **"Network error"**: Cloud voices unavailable, try offline voices
 - **"Not allowed"**: User interaction required, click page first
 
 ### Browser-Specific Solutions:
 
 **Google Chrome:**
-- Best overall support for English TTS
-- Multiple high-quality English voices available
-- Excellent cloud-based voice options
-- Use Chrome version 88 or later
+- Best overall support
+- Install Sinhala language: `chrome://settings/languages`
+- Enable "Offer to translate pages" for better Unicode handling
 
 **Microsoft Edge:**
-- Excellent support with Windows integration
-- High-quality Microsoft voices
-- Best performance on Windows systems
+- Good support with Windows language packs
+- Ensure Windows Sinhala language is installed
 - Use Edge version 88 or later
 
 **Firefox:**
-- Good basic TTS support
-- Limited voice selection compared to Chrome/Edge
-- Works well for standard English text
+- Limited TTS support
+- May work better with extensions
 - Try Firefox 87 or later
 
 **Safari:**
-- Good support on macOS/iOS
-- Quality Apple voices on Mac systems
-- iOS 14+ recommended for mobile
-- macOS Big Sur or later for desktop
+- Basic support on macOS/iOS
+- Requires macOS Monterey or later for best results
+- iOS 14+ recommended
 
 ## 📝 File Structure
 
 ```
-english-tts/
+sinhala-tts/
 ├── index.html          # Main HTML file with UI
 ├── app.js             # JavaScript logic and TTS functionality
 └── README.md          # This documentation file
@@ -274,10 +263,10 @@ This project is **open source** and available under the [MIT License](LICENSE).
 
 ## 🙏 Acknowledgments
 
-- **Google Fonts** for Inter and Poppins font families
+- **Google Fonts** for Noto Sans Sinhala font
 - **Tailwind CSS** for the utility-first CSS framework
 - **Web Speech API** for browser-based TTS functionality
-- **Open source community** for inspiration and best practices
+- **Sinhala Unicode Consortium** for standardization efforts
 
 ## 📞 Support
 
@@ -287,6 +276,6 @@ This project is **open source** and available under the [MIT License](LICENSE).
 
 ---
 
-**Built with ❤️ for everyone who needs accessible text-to-speech**
+**Built with ❤️ for the Sinhala community**
 
 *Free • Open Source • Privacy Friendly*
