@@ -38,56 +38,78 @@ function checkBrowserSupport() {
 function initializeTTS() {
     if (!isSupported) return;
 
+    console.log('🚀 Initializing TTS...');
+    
     // Mobile device detection for special handling
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    // Immediate voice loading attempt
+    loadVoices();
+    
+    // Force voice loading with multiple methods
+    function forceVoiceLoad() {
+        // Method 1: Create and cancel a dummy utterance
+        const dummyUtterance = new SpeechSynthesisUtterance(' ');
+        speechSynthesis.speak(dummyUtterance);
+        speechSynthesis.cancel();
+        
+        // Method 2: Set onvoiceschanged handler
+        speechSynthesis.onvoiceschanged = () => {
+            console.log('🔄 Voices changed event triggered');
+            loadVoices();
+        };
+        
+        // Method 3: Check voices periodically
+        let voiceCheckCount = 0;
+        const voiceChecker = setInterval(() => {
+            const currentVoices = speechSynthesis.getVoices();
+            console.log(`🔍 Voice check ${voiceCheckCount + 1}: Found ${currentVoices.length} voices`);
+            
+            if (currentVoices.length > 0) {
+                loadVoices();
+                if (voiceCheckCount > 3) { // Stop after a few successful loads
+                    clearInterval(voiceChecker);
+                }
+            }
+            
+            voiceCheckCount++;
+            if (voiceCheckCount >= 20) { // Stop after 20 attempts (10 seconds)
+                clearInterval(voiceChecker);
+                if (currentVoices.length === 0) {
+                    console.log('❌ Failed to load voices after 20 attempts');
+                    showStatus('error', 'හඬ ලෝඩ් නොවිණි | Voice Loading Failed', 
+                              'Browser restart කර නැවත උත්සාහ කරන්න | Please restart your browser and try again.');
+                }
+            }
+        }, 500);
+    }
     
     if (isMobile) {
         console.log('📱 Mobile device detected - using mobile-optimized voice loading');
         
-        // Mobile browsers need special handling
+        // Mobile browsers need delayed loading
         setTimeout(() => {
-            loadVoices();
+            forceVoiceLoad();
             
             // Android Chrome specific handling
             if (navigator.userAgent.includes('Chrome') && navigator.userAgent.includes('Android')) {
-                // Try to trigger voice loading
-                const tempUtterance = new SpeechSynthesisUtterance('');
-                speechSynthesis.speak(tempUtterance);
-                speechSynthesis.cancel();
-                setTimeout(loadVoices, 500);
+                // Additional attempts for Android Chrome
+                setTimeout(forceVoiceLoad, 1000);
+                setTimeout(forceVoiceLoad, 2000);
             }
         }, 1000);
-    }
-
-    // Load voices when they become available
-    if (speechSynthesis.onvoiceschanged !== undefined) {
-        speechSynthesis.onvoiceschanged = loadVoices;
+    } else {
+        // Desktop browsers
+        forceVoiceLoad();
     }
     
-    // Try to load voices immediately (some browsers support this)
-    loadVoices();
-    
-    // Fallback: Keep trying to load voices for 5 seconds
-    let attempts = 0;
-    const maxAttempts = 50;
-    const voiceLoadInterval = setInterval(() => {
-        const currentVoiceCount = speechSynthesis.getVoices().length;
-        
-        if (currentVoiceCount > 0) {
+    // Final attempt after page is fully loaded
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            console.log('🔄 Final voice loading attempt after page load');
             loadVoices();
-        }
-        
-        if (currentVoiceCount > 0 || attempts >= maxAttempts) {
-            clearInterval(voiceLoadInterval);
-            if (currentVoiceCount === 0) {
-                console.log('⚠️ No voices loaded after maximum attempts');
-                showStatus('error', 'හඬ ලෝඩ් නොවිණි | Voices Failed to Load', 
-                          'Browser restart කර නැවත උත්සාහ කරන්න | Try restarting your browser and reload the page.');
-            }
-            return;
-        }
-        attempts++;
-    }, 100);
+        }, 1000);
+    });
 }
 
 // Load and filter available voices
@@ -151,36 +173,34 @@ function populateVoiceSelect() {
     const voiceSelect = document.getElementById('voiceSelect');
     voiceSelect.innerHTML = '';
     
+    // Get all available voices for fallback
+    const allVoices = speechSynthesis.getVoices();
+    
+    if (allVoices.length === 0) {
+        // No voices loaded yet
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'Loading voices... Please wait';
+        voiceSelect.appendChild(option);
+        return;
+    }
+    
     if (voices.length === 0) {
-        // Check if there are any voices that might work with Sinhala
-        const allVoices = speechSynthesis.getVoices();
-        const possibleVoices = allVoices.filter(voice => {
-            const voiceName = voice.name.toLowerCase();
-            return voiceName.includes('google') || 
-                   voiceName.includes('chrome') ||
-                   voice.lang.includes('en'); // English voices as fallback
-        });
+        // No Sinhala voices found, show all available voices
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'No Sinhala voices found - Using available voices';
+        voiceSelect.appendChild(option);
         
-        if (possibleVoices.length > 0) {
+        // Add all available voices as options
+        allVoices.forEach((voice, index) => {
             const option = document.createElement('option');
-            option.value = '';
-            option.textContent = 'No Sinhala voice found - Will attempt with default voice';
+            option.value = `fallback_${index}`;
+            option.textContent = `${voice.name} (${voice.lang})`;
+            option.dataset.voiceName = voice.name;
+            option.dataset.voiceLang = voice.lang;
             voiceSelect.appendChild(option);
-            
-            possibleVoices.slice(0, 5).forEach((voice, index) => {
-                const option = document.createElement('option');
-                option.value = index;
-                option.textContent = `${voice.name} (${voice.lang}) - Fallback`;
-                option.dataset.voiceName = voice.name;
-                option.dataset.voiceLang = voice.lang;
-                voiceSelect.appendChild(option);
-            });
-        } else {
-            const option = document.createElement('option');
-            option.value = '';
-            option.textContent = 'No suitable voices available';
-            voiceSelect.appendChild(option);
-        }
+        });
     } else {
         // Add Sinhala voices
         voices.forEach((voice, index) => {
@@ -323,39 +343,58 @@ function speakText() {
     
     // Get selected voice
     const voiceSelect = document.getElementById('voiceSelect');
-    const selectedVoiceIndex = voiceSelect.value;
+    const selectedValue = voiceSelect.value;
+    const allVoices = speechSynthesis.getVoices();
     
-    if (selectedVoiceIndex !== '' && voices.length > 0) {
-        currentUtterance.voice = voices[selectedVoiceIndex];
-        console.log('🎙️ Using voice:', voices[selectedVoiceIndex].name);
+    if (selectedValue !== '' && selectedValue.startsWith('fallback_')) {
+        // Using fallback voice from all available voices
+        const voiceIndex = parseInt(selectedValue.replace('fallback_', ''));
+        if (allVoices[voiceIndex]) {
+            currentUtterance.voice = allVoices[voiceIndex];
+            console.log('🎙️ Using fallback voice:', allVoices[voiceIndex].name);
+        }
+    } else if (selectedValue !== '' && voices.length > 0) {
+        // Using selected Sinhala voice
+        const voiceIndex = parseInt(selectedValue);
+        if (voices[voiceIndex]) {
+            currentUtterance.voice = voices[voiceIndex];
+            console.log('🎙️ Using Sinhala voice:', voices[voiceIndex].name);
+        }
     } else {
-        // Smart fallback voice selection
-        const allVoices = speechSynthesis.getVoices();
+        // Auto-select best available voice
+        let bestVoice = null;
         
-        // Try to find the best available voice
-        let fallbackVoice = allVoices.find(voice => 
+        // Try to find Sinhala voice
+        bestVoice = allVoices.find(voice => 
             voice.lang.toLowerCase().includes('si') ||
             voice.name.toLowerCase().includes('sinhala')
         );
         
-        if (!fallbackVoice) {
-            fallbackVoice = allVoices.find(voice => 
-                voice.lang.toLowerCase().includes('hi') || // Hindi
-                voice.lang.toLowerCase().includes('ta')    // Tamil
+        // Fallback to Hindi/Tamil
+        if (!bestVoice) {
+            bestVoice = allVoices.find(voice => 
+                voice.lang.toLowerCase().includes('hi') || 
+                voice.lang.toLowerCase().includes('ta')
             );
         }
         
-        if (!fallbackVoice) {
-            fallbackVoice = allVoices.find(voice => 
+        // Fallback to good quality English voices
+        if (!bestVoice) {
+            bestVoice = allVoices.find(voice => 
                 voice.name.toLowerCase().includes('google') ||
                 voice.name.toLowerCase().includes('chrome') ||
                 voice.name.toLowerCase().includes('natural')
             );
         }
         
-        if (fallbackVoice) {
-            currentUtterance.voice = fallbackVoice;
-            console.log('🔄 Using fallback voice:', fallbackVoice.name);
+        // Last resort: any available voice
+        if (!bestVoice && allVoices.length > 0) {
+            bestVoice = allVoices[0];
+        }
+        
+        if (bestVoice) {
+            currentUtterance.voice = bestVoice;
+            console.log('🔄 Auto-selected voice:', bestVoice.name);
         }
     }
     
