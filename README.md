@@ -164,31 +164,73 @@ voices = allVoices.filter(voice => {
 ### Common Issues:
 
 **1. No Sinhala Voice Available**
-- Install Sinhala language pack in your OS
-- Try Google Chrome browser
-- Check Windows/Mac language settings
+- **Windows 10/11**: Settings → Time & Language → Language → Add "Sinhala (Sri Lanka)"
+- **Chrome**: Settings → Languages → Add "Sinhala" → Restart browser
+- **Alternative**: Use Chrome browser which has better Unicode support
+- **Check**: Run `window.ttsDebug.checkVoiceCapabilities()` in browser console
 
 **2. Text Not Speaking**
 - Ensure browser supports Speech Synthesis API
 - Check if text area has content
-- Verify microphone permissions (some browsers require it)
+- Verify browser permissions (some browsers require user interaction first)
+- Try clicking the page first, then use the speak button
 
-**3. Voice Sounds Wrong**
+**3. Voice Sounds Wrong or Robotic**
+- Install proper Sinhala language pack in your OS
 - Try different voices from the dropdown
-- Adjust speech rate
+- Adjust speech rate (slower often sounds better)
 - Ensure Sinhala text is properly encoded (UTF-8)
 
 **4. Mobile Issues**
-- Use Chrome on Android or Safari on iOS
-- Ensure device volume is up
-- Check if "Silent Mode" is disabled
+- **Android**: Use Chrome browser, ensure Sinhala keyboard is installed
+- **iOS**: Use Safari, go to Settings → General → Language & Region
+- Ensure device volume is up and not on silent mode
+- Try reloading the page if voices don't load initially
 
-### Debug Commands:
+**5. Voices Not Loading**
+- Refresh the page and wait a few seconds
+- Try `window.ttsDebug.forceReloadVoices()` in console
+- Clear browser cache and reload
+- Check internet connection (some voices are cloud-based)
+
+### Advanced Debugging:
+
+**Voice Analysis Commands:**
 ```javascript
-// Open browser console and run:
-window.ttsDebug.listAllVoices();  // List all available voices
-window.ttsDebug.testSinhalaText(); // Load test Sinhala text
+// Open browser console (F12) and run:
+window.ttsDebug.listAllVoices();        // List all available voices
+window.ttsDebug.checkVoiceCapabilities(); // Analyze Sinhala support
+window.ttsDebug.testSinhalaText();      // Load test text
+window.ttsDebug.forceReloadVoices();    // Force reload voices
 ```
+
+**Common Voice Issues:**
+- **"No voices found"**: Browser needs time to load voices, refresh page
+- **"Synthesis failed"**: Language pack missing, install Sinhala support
+- **"Network error"**: Cloud voices unavailable, try offline voices
+- **"Not allowed"**: User interaction required, click page first
+
+### Browser-Specific Solutions:
+
+**Google Chrome:**
+- Best overall support
+- Install Sinhala language: `chrome://settings/languages`
+- Enable "Offer to translate pages" for better Unicode handling
+
+**Microsoft Edge:**
+- Good support with Windows language packs
+- Ensure Windows Sinhala language is installed
+- Use Edge version 88 or later
+
+**Firefox:**
+- Limited TTS support
+- May work better with extensions
+- Try Firefox 87 or later
+
+**Safari:**
+- Basic support on macOS/iOS
+- Requires macOS Monterey or later for best results
+- iOS 14+ recommended
 
 ## 📝 File Structure
 

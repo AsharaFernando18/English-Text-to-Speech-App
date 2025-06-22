@@ -38,6 +38,27 @@ function checkBrowserSupport() {
 function initializeTTS() {
     if (!isSupported) return;
 
+    // Mobile device detection for special handling
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+        console.log('📱 Mobile device detected - using mobile-optimized voice loading');
+        
+        // Mobile browsers need special handling
+        setTimeout(() => {
+            loadVoices();
+            
+            // Android Chrome specific handling
+            if (navigator.userAgent.includes('Chrome') && navigator.userAgent.includes('Android')) {
+                // Try to trigger voice loading
+                const tempUtterance = new SpeechSynthesisUtterance('');
+                speechSynthesis.speak(tempUtterance);
+                speechSynthesis.cancel();
+                setTimeout(loadVoices, 500);
+            }
+        }, 1000);
+    }
+
     // Load voices when they become available
     if (speechSynthesis.onvoiceschanged !== undefined) {
         speechSynthesis.onvoiceschanged = loadVoices;
@@ -46,15 +67,25 @@ function initializeTTS() {
     // Try to load voices immediately (some browsers support this)
     loadVoices();
     
-    // Fallback: Keep trying to load voices for 3 seconds
+    // Fallback: Keep trying to load voices for 5 seconds
     let attempts = 0;
-    const maxAttempts = 30;
+    const maxAttempts = 50;
     const voiceLoadInterval = setInterval(() => {
-        if (voices.length > 0 || attempts >= maxAttempts) {
+        const currentVoiceCount = speechSynthesis.getVoices().length;
+        
+        if (currentVoiceCount > 0) {
+            loadVoices();
+        }
+        
+        if (currentVoiceCount > 0 || attempts >= maxAttempts) {
             clearInterval(voiceLoadInterval);
+            if (currentVoiceCount === 0) {
+                console.log('⚠️ No voices loaded after maximum attempts');
+                showStatus('error', 'හඬ ලෝඩ් නොවිණි | Voices Failed to Load', 
+                          'Browser restart කර නැවත උත්සාහ කරන්න | Try restarting your browser and reload the page.');
+            }
             return;
         }
-        loadVoices();
         attempts++;
     }, 100);
 }
@@ -64,7 +95,12 @@ function loadVoices() {
     const allVoices = speechSynthesis.getVoices();
     console.log('🔍 Total voices found:', allVoices.length);
     
-    // Filter for Sinhala voices
+    // Debug: List all voices for troubleshooting
+    allVoices.forEach((voice, index) => {
+        console.log(`${index}: ${voice.name} (${voice.lang}) - ${voice.localService ? 'Local' : 'Remote'}`);
+    });
+    
+    // Filter for Sinhala voices (multiple approaches)
     voices = allVoices.filter(voice => {
         const voiceName = voice.name.toLowerCase();
         const voiceLang = voice.lang.toLowerCase();
@@ -73,11 +109,38 @@ function loadVoices() {
                voiceLang.includes('sinhala') ||
                voiceName.includes('sinhala') ||
                voiceName.includes('සිංහල') ||
-               voiceLang === 'si-lk';
+               voiceLang === 'si-lk' ||
+               voiceLang === 'si_lk';
     });
     
-    console.log('🎯 Sinhala voices found:', voices.length);
-    console.log('📋 Sinhala voices:', voices.map(v => `${v.name} (${v.lang})`));
+    // If no Sinhala voices found, try Tamil or Hindi (similar pronunciation)
+    if (voices.length === 0) {
+        voices = allVoices.filter(voice => {
+            const voiceName = voice.name.toLowerCase();
+            const voiceLang = voice.lang.toLowerCase();
+            
+            return voiceLang.includes('ta') || // Tamil
+                   voiceLang.includes('hi') || // Hindi
+                   (voiceLang.includes('en') && voiceName.includes('india'));
+        });
+        console.log('🔄 Using fallback voices (Tamil/Hindi/Indian English):', voices.length);
+    }
+    
+    // Last resort: Use any Google or high-quality English voices
+    if (voices.length === 0) {
+        voices = allVoices.filter(voice => {
+            const voiceName = voice.name.toLowerCase();
+            
+            return voiceName.includes('google') ||
+                   voiceName.includes('chrome') ||
+                   voiceName.includes('natural') ||
+                   voiceName.includes('enhanced');
+        });
+        console.log('� Using high-quality fallback voices:', voices.length);
+    }
+    
+    console.log('🎯 Final selected voices:', voices.length);
+    console.log('📋 Selected voices:', voices.map(v => `${v.name} (${v.lang})`));
     
     populateVoiceSelect();
     updateVoiceStatus();
@@ -134,12 +197,22 @@ function populateVoiceSelect() {
 
 // Update voice status display
 function updateVoiceStatus() {
-    if (voices.length > 0) {
-        showStatus('success', 'Sinhala Voice Available!', 
-                  `Found ${voices.length} Sinhala voice(s). Ready to speak!`);
+    const allVoices = speechSynthesis.getVoices();
+    const sinhalaVoices = allVoices.filter(voice => {
+        const voiceLang = voice.lang.toLowerCase();
+        const voiceName = voice.name.toLowerCase();
+        return voiceLang.includes('si') || voiceName.includes('sinhala');
+    });
+    
+    if (sinhalaVoices.length > 0) {
+        showStatus('success', 'සිංහල හඬ ලබා ගත හැක! | Sinhala Voice Available!', 
+                  `${sinhalaVoices.length} සිංහල හඬ හමු විය | Found ${sinhalaVoices.length} Sinhala voice(s). Ready to speak!`);
+    } else if (voices.length > 0) {
+        showStatus('warning', 'සිංහල හඬ නැත - විකල්ප භාවිතා වේ | No Sinhala Voice - Using Fallback', 
+                  `${voices.length} විකල්ප හඬ හමු විය | Found ${voices.length} alternative voice(s). Speech quality may vary.`);
     } else {
-        showStatus('warning', 'No Sinhala Voice Found', 
-                  'Try installing Sinhala language pack or use Google Chrome for better support.');
+        showStatus('error', 'හඬ නොමැත | No Voice Available', 
+                  'Chrome browser භාවිතා කර සිංහල language pack install කරන්න | Use Chrome browser and install Sinhala language pack.');
     }
 }
 
@@ -254,17 +327,40 @@ function speakText() {
     
     if (selectedVoiceIndex !== '' && voices.length > 0) {
         currentUtterance.voice = voices[selectedVoiceIndex];
+        console.log('🎙️ Using voice:', voices[selectedVoiceIndex].name);
     } else {
-        // Try to find any voice that might work
+        // Smart fallback voice selection
         const allVoices = speechSynthesis.getVoices();
-        const fallbackVoice = allVoices.find(voice => 
-            voice.name.toLowerCase().includes('google') ||
-            voice.name.toLowerCase().includes('chrome')
+        
+        // Try to find the best available voice
+        let fallbackVoice = allVoices.find(voice => 
+            voice.lang.toLowerCase().includes('si') ||
+            voice.name.toLowerCase().includes('sinhala')
         );
+        
+        if (!fallbackVoice) {
+            fallbackVoice = allVoices.find(voice => 
+                voice.lang.toLowerCase().includes('hi') || // Hindi
+                voice.lang.toLowerCase().includes('ta')    // Tamil
+            );
+        }
+        
+        if (!fallbackVoice) {
+            fallbackVoice = allVoices.find(voice => 
+                voice.name.toLowerCase().includes('google') ||
+                voice.name.toLowerCase().includes('chrome') ||
+                voice.name.toLowerCase().includes('natural')
+            );
+        }
+        
         if (fallbackVoice) {
             currentUtterance.voice = fallbackVoice;
+            console.log('🔄 Using fallback voice:', fallbackVoice.name);
         }
     }
+    
+    // Force Sinhala language setting (helps some browsers)
+    currentUtterance.lang = 'si-LK';
     
     // Set speech parameters
     const rate = parseFloat(document.getElementById('rateSlider').value);
@@ -296,6 +392,8 @@ function speakText() {
             errorMessage = 'Speech synthesis not allowed. Please check browser permissions.';
         } else if (event.error === 'network') {
             errorMessage = 'Network error. Please check your internet connection.';
+        } else if (event.error === 'synthesis-failed') {
+            errorMessage = 'Speech synthesis failed. Try installing Sinhala language pack.';
         }
         
         showStatus('error', 'Speech Error', errorMessage);
@@ -316,30 +414,32 @@ function speakText() {
     currentUtterance.onstart = function() {
         updateButtonStates('speaking');
         let progress = 0;
+        const progressStep = 100 / Math.max(text.length / 10, 20); // Rough estimation
+        
         progressInterval = setInterval(() => {
             if (speechSynthesis.speaking && !speechSynthesis.paused) {
-                progress += 1;
+                progress += progressStep;
                 if (progress <= 95) {
-                    updateProgress('Speaking...', progress);
+                    updateProgress('කථනය කරමින්... | Speaking...', Math.min(progress, 95));
                 }
             }
-        }, (text.length * 50)); // Rough estimate based on text length
+        }, 200);
     };
     
     currentUtterance.onend = function() {
         clearInterval(progressInterval);
         updateButtonStates('idle');
-        updateProgress('Completed', 100);
+        updateProgress('සම්පූර්ණයි | Completed', 100);
         setTimeout(() => updateProgress('Ready to speak', 0), 2000);
     };
     
     // Start speaking
     try {
         speechSynthesis.speak(currentUtterance);
-        console.log('🚀 Speech synthesis started');
+        console.log('🚀 Speech synthesis started with text:', text.substring(0, 50) + '...');
     } catch (error) {
         console.error('❌ Failed to start speech:', error);
-        showStatus('error', 'Speech Failed', 'Failed to start speech synthesis.');
+        showStatus('error', 'Speech Failed', 'Failed to start speech synthesis. Try refreshing the page.');
     }
 }
 
@@ -423,21 +523,120 @@ function listAllVoices() {
     allVoices.forEach((voice, index) => {
         console.log(`${index}: ${voice.name} (${voice.lang}) - ${voice.localService ? 'Local' : 'Remote'}`);
     });
+    
+    // Group by language for better analysis
+    const languageGroups = {};
+    allVoices.forEach(voice => {
+        const lang = voice.lang.toLowerCase();
+        if (!languageGroups[lang]) {
+            languageGroups[lang] = [];
+        }
+        languageGroups[lang].push(voice.name);
+    });
+    
+    console.log('📊 Voices grouped by language:');
+    Object.keys(languageGroups).sort().forEach(lang => {
+        console.log(`${lang}: ${languageGroups[lang].join(', ')}`);
+    });
 }
 
 function testSinhalaText() {
-    const testText = 'ආයුබෝවන්. මේ සිංහල පාඨ කථන පරීක්ෂණයකි.';
-    document.getElementById('textInput').value = testText;
+    const testTexts = [
+        'ආයුබෝවන්. මේ සිංහල පාඨ කථන පරීක්ෂණයකි.',
+        'සුභ උදෑසනක් වේවා!',
+        'ඔබට කෙසේද? ඔබේ සෞඛ්‍යය හොඳින් තිබේද?',
+        'ශ්‍රී ලංකාව අපේ මාතෘභූමිය.',
+        '123 එක දෙක තුන'
+    ];
+    
+    const randomText = testTexts[Math.floor(Math.random() * testTexts.length)];
+    document.getElementById('textInput').value = randomText;
     document.getElementById('textInput').dispatchEvent(new Event('input'));
+    console.log('🧪 Test text loaded:', randomText);
+}
+
+function checkVoiceCapabilities() {
+    const allVoices = speechSynthesis.getVoices();
+    const sinhalaVoices = allVoices.filter(voice => 
+        voice.lang.toLowerCase().includes('si') || 
+        voice.name.toLowerCase().includes('sinhala')
+    );
+    
+    console.log('🎯 Sinhala Voice Analysis:');
+    console.log(`Total voices: ${allVoices.length}`);
+    console.log(`Sinhala voices: ${sinhalaVoices.length}`);
+    
+    if (sinhalaVoices.length > 0) {
+        console.log('✅ Sinhala voices available:');
+        sinhalaVoices.forEach(voice => {
+            console.log(`  - ${voice.name} (${voice.lang}) ${voice.localService ? '[Local]' : '[Remote]'}`);
+        });
+    } else {
+        console.log('⚠️ No Sinhala voices found');
+        console.log('💡 Suggestions:');
+        console.log('  1. Install Sinhala language pack in Windows/Mac');
+        console.log('  2. Use Google Chrome browser');
+        console.log('  3. Add Sinhala in Chrome Languages settings');
+    }
+    
+    // Check for fallback options
+    const fallbackVoices = allVoices.filter(voice => {
+        const name = voice.name.toLowerCase();
+        const lang = voice.lang.toLowerCase();
+        return lang.includes('hi') || lang.includes('ta') || 
+               (lang.includes('en') && name.includes('india'));
+    });
+    
+    if (fallbackVoices.length > 0) {
+        console.log('🔄 Available fallback voices:');
+        fallbackVoices.forEach(voice => {
+            console.log(`  - ${voice.name} (${voice.lang})`);
+        });
+    }
+    
+    return {
+        totalVoices: allVoices.length,
+        sinhalaVoices: sinhalaVoices.length,
+        fallbackVoices: fallbackVoices.length,
+        hasGoodSupport: sinhalaVoices.length > 0,
+        hasFallback: fallbackVoices.length > 0
+    };
+}
+
+function forceReloadVoices() {
+    console.log('🔄 Force reloading voices...');
+    
+    // Clear current voices
+    voices = [];
+    
+    // Try multiple methods to trigger voice loading
+    const utterance = new SpeechSynthesisUtterance(' ');
+    speechSynthesis.speak(utterance);
+    speechSynthesis.cancel();
+    
+    setTimeout(() => {
+        loadVoices();
+        console.log('✅ Voice reload complete');
+    }, 500);
 }
 
 // Export functions for debugging (attach to window)
 window.ttsDebug = {
     listAllVoices,
     testSinhalaText,
+    checkVoiceCapabilities,
+    forceReloadVoices,
     voices: () => voices,
-    isSupported: () => isSupported
+    allVoices: () => speechSynthesis.getVoices(),
+    isSupported: () => isSupported,
+    currentUtterance: () => currentUtterance
 };
 
 console.log('🎯 Sinhala TTS App initialized successfully!');
-console.log('🛠️ Debug functions available: window.ttsDebug.listAllVoices(), window.ttsDebug.testSinhalaText()');
+console.log('🛠️ Debug functions available:');
+console.log('  - window.ttsDebug.listAllVoices() - List all available voices');
+console.log('  - window.ttsDebug.testSinhalaText() - Load test Sinhala text');
+console.log('  - window.ttsDebug.checkVoiceCapabilities() - Analyze voice support');
+console.log('  - window.ttsDebug.forceReloadVoices() - Force reload voices');
+console.log('  - window.ttsDebug.voices() - Show currently selected voices');
+console.log('  - window.ttsDebug.allVoices() - Show all browser voices');
