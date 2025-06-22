@@ -138,6 +138,28 @@
             border: none;
             box-shadow: 0 0 6px rgba(102, 126, 234, 0.5);
         }
+        
+        /* Improved button hover and active states */
+        button:active:not(:disabled) {
+            transform: translateY(1px);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Focus states for accessibility */
+        button:focus, select:focus, textarea:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.5);
+        }
+        
+        /* Loading indicator animation */
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .loading {
+            animation: spin 1s linear infinite;
+        }
     </style>
 </head>
 
@@ -352,8 +374,7 @@
                                 <p>Works on all modern browsers</p>
                             </div>
                         </div>
-                    </div>
-                      <button onclick="window.ttsDebug.analyzeVoices()" 
+                    </div>                      <button id="analyzeVoicesBtn" 
                             class="w-full mt-4 px-4 py-2 bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 rounded-lg transition-all duration-300 flex items-center justify-center space-x-2">
                         <i class="fas fa-search"></i>
                         <span>Analyze Voices</span>

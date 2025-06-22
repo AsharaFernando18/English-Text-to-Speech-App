@@ -520,6 +520,19 @@ function setupEventListeners() {
     if (testVoiceBtn) {
         testVoiceBtn.addEventListener('click', testCurrentVoice);
     }
+    
+    // Add event listener for analyze voices button
+    const analyzeVoicesBtn = document.getElementById('analyzeVoicesBtn');
+    if (analyzeVoicesBtn) {
+        analyzeVoicesBtn.addEventListener('click', function() {
+            if (window.ttsDebug && typeof window.ttsDebug.analyzeVoices === 'function') {
+                window.ttsDebug.analyzeVoices();
+                showNotification('Voice analysis complete. Check browser console for details.', 'info');
+            } else {
+                showNotification('Debug tools not available', 'error');
+            }
+        });
+    }
 }
 
 // Function to show status messages
