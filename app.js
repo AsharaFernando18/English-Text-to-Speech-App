@@ -578,13 +578,25 @@ function setupEventListeners() {
         testVoiceBtn.addEventListener('click', testCurrentVoice);
     }
     
-    // Add event listener for analyze voices button
-    const analyzeVoicesBtn = document.getElementById('analyzeVoicesBtn');
+    // Add event listener for analyze voices button    const analyzeVoicesBtn = document.getElementById('analyzeVoicesBtn');
     if (analyzeVoicesBtn) {
         analyzeVoicesBtn.addEventListener('click', function() {
             if (window.ttsDebug && typeof window.ttsDebug.analyzeVoices === 'function') {
                 window.ttsDebug.analyzeVoices();
                 showNotification('Voice analysis complete. Check browser console for details.', 'info');
+            } else {
+                showNotification('Debug tools not available', 'error');
+            }
+        });
+    }
+    
+    // Add event listener for reset welcome tooltip button
+    const resetWelcomeBtn = document.getElementById('resetWelcomeBtn');
+    if (resetWelcomeBtn) {
+        resetWelcomeBtn.addEventListener('click', function() {
+            if (window.ttsDebug && typeof window.ttsDebug.resetWelcomeTooltip === 'function') {
+                window.ttsDebug.resetWelcomeTooltip();
+                showNotification('Welcome tooltip has been reset and displayed', 'info');
             } else {
                 showNotification('Debug tools not available', 'error');
             }
@@ -1413,8 +1425,16 @@ function showInitialHelp() {
 
 // Welcome tooltip for first-time users
 function showWelcomeTooltip() {
+    // First check if tooltip already exists and remove it
+    const existingTooltip = document.querySelector('.welcome-tooltip');
+    if (existingTooltip) {
+        document.body.removeChild(existingTooltip);
+    }
+    
     const tooltip = document.createElement('div');
-    tooltip.className = 'fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-indigo-900 text-white p-6 rounded-xl shadow-xl z-50 max-w-md w-full transition-opacity duration-300';
+    tooltip.className = 'welcome-tooltip fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-indigo-900 text-white p-6 rounded-xl shadow-xl z-50 max-w-md w-full';
+    tooltip.style.transition = 'opacity 300ms ease-in-out';
+    tooltip.style.opacity = '1';
     tooltip.setAttribute('role', 'dialog');
     tooltip.setAttribute('aria-labelledby', 'welcomeTitle');
     
@@ -1455,22 +1475,50 @@ function showWelcomeTooltip() {
                 Got it, let's go!
             </button>
         </div>
-    `;
+    `;    document.body.appendChild(tooltip);
     
-    document.body.appendChild(tooltip);
+    // Direct button click handler as a fallback
+    const startButton = document.getElementById('startUsingTTS');
+    if (startButton) {
+        startButton.onclick = function(e) {
+            console.log('Close button clicked via direct onclick');
+            e.preventDefault();
+            
+            // Add a local storage flag to prevent showing the tooltip again
+            localStorage.setItem('welcomeTooltipShown', 'true');
+            
+            // Fade out the tooltip
+            tooltip.style.opacity = '0';
+            
+            // Remove after transition
+            setTimeout(() => {
+                if (document.body.contains(tooltip)) {
+                    document.body.removeChild(tooltip);
+                }
+            }, 300);
+            
+            return false;
+        };
+    }
     
-    // Close on button click
-    document.getElementById('startUsingTTS').addEventListener('click', function() {
-        tooltip.classList.add('opacity-0');
-        
-        // Add a local storage flag to prevent showing the tooltip again
-        localStorage.setItem('welcomeTooltipShown', 'true');
-        
-        setTimeout(() => {
-            if (document.body.contains(tooltip)) {
-                document.body.removeChild(tooltip);
-            }
-        }, 300);
+    // Add event listener with jQuery-style direct attachment for maximum browser compatibility
+    document.addEventListener('click', function handleButtonClick(e) {
+        if (e.target && e.target.id === 'startUsingTTS') {
+            console.log('Close button clicked via global listener');
+            
+            // Add a local storage flag to prevent showing the tooltip again
+            localStorage.setItem('welcomeTooltipShown', 'true');
+            
+            // Fade out the tooltip
+            tooltip.style.opacity = '0';
+              // Remove after transition and remove this event listener
+            setTimeout(() => {
+                if (document.body.contains(tooltip)) {
+                    document.body.removeChild(tooltip);
+                }
+                document.removeEventListener('click', handleButtonClick);
+            }, 300);
+        }
     });
 }
 
@@ -1509,11 +1557,33 @@ const debugTools = {
             console.log(`- ${voice.name} (${voice.lang})`);
         });
     },
-    
-    forceReload() {
+      forceReload() {
         console.log('🔄 Force reloading voices...');
         voicesLoaded = false;
         initializeTTS();
+    },
+      resetWelcomeTooltip() {
+        localStorage.removeItem('welcomeTooltipShown');
+        console.log('Welcome tooltip reset - will show on next page load');
+        showWelcomeTooltip();
+    },
+    
+    closeWelcomeTooltip() {
+        const tooltip = document.querySelector('.welcome-tooltip');
+        if (tooltip) {
+            console.log('Manually closing welcome tooltip');
+            localStorage.setItem('welcomeTooltipShown', 'true');
+            tooltip.style.opacity = '0';
+            setTimeout(() => {
+                if (document.body.contains(tooltip)) {
+                    document.body.removeChild(tooltip);
+                }
+            }, 300);
+            return true;
+        } else {
+            console.log('No welcome tooltip found to close');
+            return false;
+        }
     }
 };
 
@@ -1646,7 +1716,7 @@ function styleSelectOptions() {
 // Initialize page
 console.log('🎯 Modern English TTS App loaded successfully!');
 console.log('🛠️ Debug tools: window.ttsDebug');
-console.log('📊 Available methods: listAllVoices, analyzeVoices, testEnglishVoices, forceReload');
+console.log('📊 Available methods: listAllVoices, analyzeVoices, testEnglishVoices, forceReload, resetWelcomeTooltip, closeWelcomeTooltip');
 
 styleSelectOptions();
 
