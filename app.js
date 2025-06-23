@@ -311,8 +311,7 @@ function populateVoiceSelect() {
     
     const otherVoices = allVoices.filter(voice => 
         !englishVoices.includes(voice) && !qualityVoices.includes(voice)
-    );
-      // Add English voices
+    );    // Add English voices
     if (englishVoices.length > 0) {
         const group = document.createElement('optgroup');
         group.label = '🇬🇧 English Voices (Best)';
@@ -320,7 +319,16 @@ function populateVoiceSelect() {
             const option = document.createElement('option');
             option.value = `english_${index}`;
             option.textContent = `${voice.name} (${voice.lang}) ${voice.localService ? '📱' : '☁️'}`;
-            option.dataset.voice = JSON.stringify(voice);
+            
+            // Store minimal voice data
+            const voiceData = {
+                name: voice.name,
+                lang: voice.lang,
+                localService: voice.localService,
+                default: voice.default
+            };
+            option.dataset.voice = JSON.stringify(voiceData);
+            
             group.appendChild(option);
         });
         voiceSelect.appendChild(group);
@@ -334,7 +342,16 @@ function populateVoiceSelect() {
             const option = document.createElement('option');
             option.value = `quality_${index}`;
             option.textContent = `${voice.name} (${voice.lang}) ${voice.localService ? '📱' : '☁️'}`;
-            option.dataset.voice = JSON.stringify(voice);
+            
+            // Store minimal voice data
+            const voiceData = {
+                name: voice.name,
+                lang: voice.lang,
+                localService: voice.localService,
+                default: voice.default
+            };
+            option.dataset.voice = JSON.stringify(voiceData);
+            
             group.appendChild(option);
         });
         voiceSelect.appendChild(group);
@@ -348,7 +365,16 @@ function populateVoiceSelect() {
             const option = document.createElement('option');
             option.value = `other_${index}`;
             option.textContent = `${voice.name} (${voice.lang}) ${voice.localService ? '📱' : '☁️'}`;
-            option.dataset.voice = JSON.stringify(voice);
+            
+            // Store minimal voice data
+            const voiceData = {
+                name: voice.name,
+                lang: voice.lang,
+                localService: voice.localService,
+                default: voice.default
+            };
+            option.dataset.voice = JSON.stringify(voiceData);
+            
             group.appendChild(option);
         });
         voiceSelect.appendChild(group);
@@ -697,8 +723,7 @@ function speakText() {
         showNotification('Error creating speech utterance', 'error');
         return;
     }
-    
-    // Get selected voice
+      // Get selected voice
     const voiceSelect = document.getElementById('voiceSelect');
     const selectedOption = voiceSelect.options[voiceSelect.selectedIndex];
     
@@ -709,11 +734,25 @@ function speakText() {
             
             try {
                 const voice = JSON.parse(voiceData);
-                currentUtterance.voice = voice;
-                console.log('🎙️ Using voice:', voice.name);
+                // Find matching voice in the current available voices
+                const matchingVoice = speechSynthesis.getVoices().find(v => 
+                    v.name === voice.name && v.lang === voice.lang
+                );
+                
+                if (matchingVoice) {
+                    // Use the actual voice object, not the stored JSON data
+                    currentUtterance.voice = matchingVoice;
+                    console.log('🎙️ Using voice:', matchingVoice.name);
+                } else {
+                    console.warn('⚠️ Selected voice not found in current voices, using fallback');
+                    const bestVoice = getBestVoice();
+                    if (bestVoice) {
+                        currentUtterance.voice = bestVoice;
+                        console.log('🤖 Using fallback voice:', bestVoice.name);
+                    }                }
             } catch (parseError) {
                 console.error('❌ Error parsing voice data:', parseError);
-                showNotification('Error with selected voice. Trying a fallback voice.', 'warning');
+                handleTTSError('voice-selection', parseError);
                 
                 // Auto-select best voice as fallback
                 const bestVoice = getBestVoice();
@@ -731,6 +770,7 @@ function speakText() {
                 console.log('🤖 Auto-selected voice:', bestVoice.name);
             } else {
                 console.warn('⚠️ No voice available, using browser default');
+                handleTTSError('no-voices', 'No voices available to select from');
             }
         }
     } catch (voiceError) {
@@ -790,16 +830,41 @@ function getBestVoice() {
     
     if (allVoices.length === 0) {
         console.warn('⚠️ No voices available to select from');
+        
+        // Try to force reload voices if none are available
+        setTimeout(() => {
+            console.log('🔄 Attempting to reload voices...');
+            voicesLoaded = false;
+            initializeTTS();
+        }, 500);
+        
         return null;
     }
       
     // Try to find English voices first
-    const englishVoices = allVoices.filter(voice => 
-        voice.lang.toLowerCase().includes('en') || 
-        voice.name.toLowerCase().includes('english')
-    );
+    const englishVoices = allVoices.filter(voice => {
+        const lang = voice.lang.toLowerCase();
+        const name = voice.name.toLowerCase();
+        return lang.includes('en') || 
+               lang.startsWith('en-') || 
+               name.includes('english');
+    });
     
     if (englishVoices.length > 0) {
+        // Find a good quality English voice (prefer Google/Microsoft voices)
+        const preferredVoice = englishVoices.find(voice => {
+            const name = voice.name.toLowerCase();
+            return name.includes('google') || 
+                   name.includes('microsoft') || 
+                   name.includes('premium') ||
+                   name.includes('natural');
+        });
+        
+        if (preferredVoice) {
+            console.log('✅ Selected preferred English voice:', preferredVoice.name);
+            return preferredVoice;
+        }
+        
         console.log('✅ Selected English voice:', englishVoices[0].name);
         return englishVoices[0];
     }
@@ -1586,3 +1651,65 @@ console.log('📊 Available methods: listAllVoices, analyzeVoices, testEnglishVo
 styleSelectOptions();
 
 showInitialHelp();
+
+// Enhanced error handling for TTS voice issues
+function handleTTSError(errorType, errorDetails) {
+    console.error(`❌ TTS Error (${errorType}):`, errorDetails);
+    
+    switch(errorType) {
+        case 'voice-selection':
+            showNotification('Voice selection issue. Using a different voice.', 'warning');
+            // Try to force refresh voices list
+            setTimeout(() => {
+                loadVoices();
+            }, 500);
+            break;
+        
+        case 'synthesis-failed':
+            showNotification('Speech synthesis failed. Try another voice or browser.', 'error');
+            break;
+        
+        case 'no-voices':
+            showNotification('No voices available. Try refreshing or using a different browser.', 'error');
+            // Show the voice status card
+            updateVoiceStatus();
+            break;
+            
+        case 'network':
+            showNotification('Network error with cloud voice. Try a local voice.', 'warning');
+            break;
+            
+        default:
+            showNotification('Text-to-speech error. Try a different voice or refresh the page.', 'error');
+    }
+    
+    // Add a button to help users troubleshoot
+    if (!document.getElementById('troubleshootBtn')) {
+        const troubleshootBtn = document.createElement('button');
+        troubleshootBtn.id = 'troubleshootBtn';
+        troubleshootBtn.className = 'fixed bottom-16 right-4 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition-all duration-300 shadow-lg';
+        troubleshootBtn.innerHTML = '<i class="fas fa-wrench mr-1"></i> Troubleshoot Voices';
+        troubleshootBtn.onclick = function() {
+            // Reset voices and attempt recovery
+            speechSynthesis.cancel();
+            voicesLoaded = false;
+            initializeTTS();
+            setTimeout(() => {
+                showNotification('Voices reloaded. Try selecting a different voice.', 'info');
+            }, 1000);
+            
+            // Remove this button after use
+            this.remove();
+        };
+        document.body.appendChild(troubleshootBtn);
+        
+        // Auto-remove after 30 seconds
+        setTimeout(() => {
+            if (document.body.contains(troubleshootBtn)) {
+                troubleshootBtn.remove();
+            }
+        }, 30000);
+    }
+    
+    return null;
+}
