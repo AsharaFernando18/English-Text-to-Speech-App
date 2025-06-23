@@ -1338,12 +1338,10 @@ function showInitialHelp() {
     }, 5000);
     
     // Check if this is the first visit
-    if (!localStorage.getItem('ttsAppVisited')) {
+    if (!localStorage.getItem('welcomeTooltipShown')) {
         // Show welcome tooltip
         setTimeout(() => {
             showWelcomeTooltip();
-            // Mark as visited
-            localStorage.setItem('ttsAppVisited', 'true');
         }, 2500);
     }
 }
@@ -1351,7 +1349,7 @@ function showInitialHelp() {
 // Welcome tooltip for first-time users
 function showWelcomeTooltip() {
     const tooltip = document.createElement('div');
-    tooltip.className = 'fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-indigo-900 text-white p-6 rounded-xl shadow-xl z-50 max-w-md w-full';
+    tooltip.className = 'fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-indigo-900 text-white p-6 rounded-xl shadow-xl z-50 max-w-md w-full transition-opacity duration-300';
     tooltip.setAttribute('role', 'dialog');
     tooltip.setAttribute('aria-labelledby', 'welcomeTitle');
     
@@ -1397,10 +1395,16 @@ function showWelcomeTooltip() {
     document.body.appendChild(tooltip);
     
     // Close on button click
-    document.getElementById('startUsingTTS').addEventListener('click', () => {
+    document.getElementById('startUsingTTS').addEventListener('click', function() {
         tooltip.classList.add('opacity-0');
+        
+        // Add a local storage flag to prevent showing the tooltip again
+        localStorage.setItem('welcomeTooltipShown', 'true');
+        
         setTimeout(() => {
-            document.body.removeChild(tooltip);
+            if (document.body.contains(tooltip)) {
+                document.body.removeChild(tooltip);
+            }
         }, 300);
     });
 }
