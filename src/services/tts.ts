@@ -201,9 +201,6 @@ export class TTSService {
                   case 'text-too-long':
                     errorMessage = 'Text is too long for speech synthesis'
                     break
-                  case 'rate-not-supported':
-                    errorMessage = 'Speech rate not supported'
-                    break
                   default:
                     errorMessage = `Speech error: ${event.error}`
                 }
