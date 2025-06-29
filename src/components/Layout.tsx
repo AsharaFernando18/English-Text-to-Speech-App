@@ -19,7 +19,7 @@ interface LayoutProps {
 }
 
 export default function Layout({ children }: LayoutProps) {
-  const { theme, setTheme, actualTheme } = useTheme()
+  const { theme, setTheme } = useTheme()
   const location = useLocation()
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
 
@@ -144,7 +144,7 @@ export default function Layout({ children }: LayoutProps) {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1">
+      <main className="flex-1" id="main-content">
         {children}
       </main>
 
