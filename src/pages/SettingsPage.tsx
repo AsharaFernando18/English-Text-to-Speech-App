@@ -1,4 +1,3 @@
-import React from 'react'
 import { motion } from 'framer-motion'
 import { Settings, Volume2, Mic, Globe, Zap, Shield } from 'lucide-react'
 import { useTTS } from '@/contexts/TTSContext'

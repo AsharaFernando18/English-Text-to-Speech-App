@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { useDropzone } from 'react-dropzone'
 import { 
@@ -36,7 +36,6 @@ export default function HomePage() {
     settings,
     speechState,
     isLoading,
-    currentText,
     highlightedWordIndex,
     speak,
     pause,
@@ -238,7 +237,7 @@ export default function HomePage() {
                   <div className="space-y-2">
                     <p className="text-sm font-medium">Quick Samples:</p>
                     <div className="flex flex-wrap gap-2">
-                      {Object.entries(sampleTexts).map(([key, value]) => (
+                      {Object.entries(sampleTexts).map(([key]) => (
                         <Button
                           key={key}
                           variant="outline"
