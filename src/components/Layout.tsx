@@ -40,19 +40,19 @@ export default function Layout({ children }: LayoutProps) {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="sticky top-0 z-50 w-full border-b border-border/40 glass">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             {/* Logo */}
-            <Link to="/" className="flex items-center space-x-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <Volume2 className="h-5 w-5" />
+            <Link to="/" className="flex items-center space-x-3 group">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-blue-500 text-primary-foreground shadow-lg glow transition-all group-hover:scale-105">
+                <Volume2 className="h-6 w-6" />
               </div>
-              <span className="text-xl font-bold gradient-text">Modern TTS</span>
+              <span className="text-xl font-bold gradient-text">VoiceFlow AI</span>
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center space-x-6">
+            <nav className="hidden md:flex items-center space-x-2">
               {navigation.map((item) => {
                 const Icon = item.icon
                 const isActive = location.pathname === item.href
@@ -61,10 +61,10 @@ export default function Layout({ children }: LayoutProps) {
                   <Link
                     key={item.name}
                     to={item.href}
-                    className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
                       isActive
-                        ? 'bg-primary text-primary-foreground'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                        ? 'bg-gradient-to-r from-primary to-blue-500 text-primary-foreground shadow-lg glow'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
                     }`}
                   >
                     <Icon className="h-4 w-4" />
@@ -85,9 +85,9 @@ export default function Layout({ children }: LayoutProps) {
                   const nextIndex = (currentIndex + 1) % themes.length
                   setTheme(themes[nextIndex])
                 }}
-                className="h-9 w-9 p-0"
+                className="h-10 w-10 p-0 rounded-xl hover:bg-accent/50 transition-all hover:scale-105"
               >
-                <ThemeIcon className="h-4 w-4" />
+                <ThemeIcon className="h-5 w-5" />
                 <span className="sr-only">Toggle theme</span>
               </Button>
 
@@ -95,7 +95,7 @@ export default function Layout({ children }: LayoutProps) {
               <Button
                 variant="ghost"
                 size="sm"
-                className="md:hidden h-9 w-9 p-0"
+                className="md:hidden h-10 w-10 p-0 rounded-xl hover:bg-accent/50"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               >
                 {mobileMenuOpen ? (
@@ -126,10 +126,10 @@ export default function Layout({ children }: LayoutProps) {
                       key={item.name}
                       to={item.href}
                       onClick={() => setMobileMenuOpen(false)}
-                      className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      className={`flex items-center space-x-2 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                         isActive
-                          ? 'bg-primary text-primary-foreground'
-                          : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                          ? 'bg-gradient-to-r from-primary to-blue-500 text-primary-foreground shadow-lg'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
                       }`}
                     >
                       <Icon className="h-4 w-4" />
@@ -149,23 +149,23 @@ export default function Layout({ children }: LayoutProps) {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border/40 bg-muted/50">
+      <footer className="border-t border-border/40 glass mt-16">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="text-center md:text-left">
-              <p className="text-sm text-muted-foreground">
-                Built with ❤️ for accessibility and modern web standards
+              <p className="text-sm text-muted-foreground flex items-center justify-center md:justify-start gap-2">
+                Built with <span className="text-red-500 animate-pulse-slow">❤️</span> for accessibility and modern web standards
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                © 2024 Modern TTS. Open source and privacy-friendly.
+                © 2026 VoiceFlow AI. Open source and privacy-friendly.
               </p>
             </div>
             <div className="flex items-center space-x-4 text-xs text-muted-foreground">
-              <span>Keyboard shortcuts:</span>
+              <span className="hidden sm:inline">Keyboard shortcuts:</span>
               <div className="flex space-x-2">
-                <kbd className="px-2 py-1 bg-muted rounded text-xs">Ctrl+Enter</kbd>
-                <kbd className="px-2 py-1 bg-muted rounded text-xs">Space</kbd>
-                <kbd className="px-2 py-1 bg-muted rounded text-xs">Esc</kbd>
+                <kbd className="px-3 py-1.5 bg-accent/50 rounded-lg text-xs font-mono border border-border shadow-sm">Ctrl+Enter</kbd>
+                <kbd className="px-3 py-1.5 bg-accent/50 rounded-lg text-xs font-mono border border-border shadow-sm">Space</kbd>
+                <kbd className="px-3 py-1.5 bg-accent/50 rounded-lg text-xs font-mono border border-border shadow-sm">Esc</kbd>
               </div>
             </div>
           </div>

@@ -152,13 +152,20 @@ export default function HomePage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
+          className="text-center mb-12"
         >
-          <h1 className="text-4xl font-bold gradient-text mb-4">
-            Modern Text-to-Speech
+          <div className="inline-block mb-4">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium">
+              <Zap className="h-4 w-4" />
+              <span>AI-Powered Voice Synthesis</span>
+            </div>
+          </div>
+          <h1 className="text-5xl md:text-6xl font-bold gradient-text mb-6 animate-in">
+            VoiceFlow AI
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
             Transform your text into natural, expressive speech with our advanced AI-powered voices.
+            <br className="hidden md:inline" />
             Perfect for accessibility, content creation, and learning.
           </p>
         </motion.div>
@@ -172,10 +179,12 @@ export default function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
             >
-              <Card>
+              <Card className="shadow-xl border-primary/10 hover:shadow-2xl transition-all duration-300">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <div className="p-2 rounded-lg bg-primary/10">
+                      <FileText className="h-5 w-5 text-primary" />
+                    </div>
                     Text Input
                     <span className="ml-auto text-sm font-normal text-muted-foreground">
                       {charCount}/5000 characters
@@ -186,21 +195,25 @@ export default function HomePage() {
                   {/* File Upload */}
                   <div
                     {...getRootProps()}
-                    className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
+                    className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-300 ${
                       isDragActive
-                        ? 'border-primary bg-primary/5'
-                        : 'border-muted-foreground/25 hover:border-primary/50'
+                        ? 'border-primary bg-primary/10 scale-105 shadow-lg'
+                        : 'border-muted-foreground/25 hover:border-primary/50 hover:bg-accent/20'
                     }`}
                   >
                     <input {...getInputProps()} />
-                    <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">
+                    <div className={`inline-block p-4 rounded-full mb-3 transition-all ${
+                      isDragActive ? 'bg-primary/20 scale-110' : 'bg-accent/50'
+                    }`}>
+                      <Upload className="h-8 w-8 text-primary" />
+                    </div>
+                    <p className="text-sm font-medium text-foreground mb-1">
                       {isDragActive
                         ? 'Drop your file here...'
                         : 'Drag & drop a text file, or click to select'}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Supports .txt, .pdf, .doc, .docx files
+                    <p className="text-xs text-muted-foreground">
+                      Supports .txt, .pdf, .doc, .docx files (max 10MB)
                     </p>
                   </div>
 
@@ -234,8 +247,11 @@ export default function HomePage() {
                   </div>
 
                   {/* Sample Texts */}
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium">Quick Samples:</p>
+                  <div className="space-y-3">
+                    <p className="text-sm font-medium flex items-center gap-2">
+                      <Zap className="h-4 w-4 text-primary" />
+                      Quick Samples:
+                    </p>
                     <div className="flex flex-wrap gap-2">
                       {Object.entries(sampleTexts).map(([key]) => (
                         <Button
@@ -243,7 +259,7 @@ export default function HomePage() {
                           variant="outline"
                           size="sm"
                           onClick={() => handleSampleText(key as keyof typeof sampleTexts)}
-                          className="text-xs"
+                          className="text-xs rounded-full hover:bg-primary/10 hover:text-primary hover:border-primary/50 transition-all"
                         >
                           {key.charAt(0).toUpperCase() + key.slice(1)}
                         </Button>
@@ -260,10 +276,12 @@ export default function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              <Card>
+              <Card className="shadow-xl border-primary/10 hover:shadow-2xl transition-all duration-300">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Volume2 className="h-5 w-5" />
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <div className="p-2 rounded-lg bg-primary/10">
+                      <Volume2 className="h-5 w-5 text-primary" />
+                    </div>
                     Speech Controls
                   </CardTitle>
                 </CardHeader>
@@ -272,7 +290,7 @@ export default function HomePage() {
                     <Button
                       onClick={handleSpeak}
                       disabled={isLoading || speechState === 'speaking'}
-                      className="flex items-center gap-2"
+                      className="flex items-center gap-2 bg-gradient-to-r from-primary to-blue-500 hover:shadow-lg hover:scale-105 transition-all rounded-xl"
                     >
                       {isLoading ? (
                         <div className="spinner" />
@@ -286,7 +304,7 @@ export default function HomePage() {
                       onClick={handlePause}
                       disabled={speechState === 'idle'}
                       variant="outline"
-                      className="flex items-center gap-2"
+                      className="flex items-center gap-2 rounded-xl hover:bg-primary/10 hover:border-primary transition-all"
                     >
                       <Pause className="h-4 w-4" />
                       {speechState === 'paused' ? 'Resume' : 'Pause'}
@@ -296,7 +314,7 @@ export default function HomePage() {
                       onClick={handleStop}
                       disabled={speechState === 'idle'}
                       variant="outline"
-                      className="flex items-center gap-2"
+                      className="flex items-center gap-2 rounded-xl hover:bg-primary/10 hover:border-primary transition-all"
                     >
                       <Square className="h-4 w-4" />
                       Stop
@@ -306,7 +324,7 @@ export default function HomePage() {
                       onClick={handleDownload}
                       disabled={isLoading || !text.trim()}
                       variant="outline"
-                      className="flex items-center gap-2"
+                      className="flex items-center gap-2 rounded-xl hover:bg-primary/10 hover:border-primary transition-all"
                     >
                       <Download className="h-4 w-4" />
                       Download
@@ -315,7 +333,7 @@ export default function HomePage() {
 
                   {/* Audio Visualization */}
                   {speechState === 'speaking' && (
-                    <div className="flex items-center justify-center space-x-1 mb-4">
+                    <div className="flex items-center justify-center space-x-1 mb-6 p-4 rounded-xl bg-primary/5 border border-primary/20">
                       {[...Array(5)].map((_, i) => (
                         <div key={i} className="wave-bar" />
                       ))}
@@ -357,10 +375,12 @@ export default function HomePage() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 }}
             >
-              <Card>
+              <Card className="shadow-xl border-primary/10 hover:shadow-2xl transition-all duration-300">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Mic className="h-5 w-5" />
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <div className="p-2 rounded-lg bg-primary/10">
+                      <Mic className="h-5 w-5 text-primary" />
+                    </div>
                     Voice Selection
                   </CardTitle>
                 </CardHeader>
@@ -371,6 +391,7 @@ export default function HomePage() {
                       const voice = voices.find(v => v.id === e.target.value)
                       if (voice) selectVoice(voice)
                     }}
+                    className="rounded-xl"
                   >
                     <option value="">Select a voice...</option>
                     {voices.map((voice) => (
@@ -382,17 +403,34 @@ export default function HomePage() {
                   </Select>
 
                   {selectedVoice && (
-                    <div className="p-3 bg-muted rounded-lg text-sm">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Zap className="h-4 w-4 text-primary" />
-                        <span className="font-medium">Voice Details</span>
+                    <div className="p-4 bg-gradient-to-br from-primary/5 to-blue-500/5 rounded-xl text-sm border border-primary/10">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="p-1.5 rounded-lg bg-primary/10">
+                          <Zap className="h-4 w-4 text-primary" />
+                        </div>
+                        <span className="font-semibold text-foreground">Voice Details</span>
                       </div>
-                      <div className="space-y-1 text-muted-foreground">
-                        <p>Language: {selectedVoice.lang}</p>
-                        <p>Accent: {selectedVoice.accent.toUpperCase()}</p>
-                        <p>Gender: {selectedVoice.gender}</p>
-                        <p>Quality: {selectedVoice.quality}</p>
-                        <p>Provider: {selectedVoice.provider}</p>
+                      <div className="space-y-2 text-muted-foreground">
+                        <div className="flex justify-between">
+                          <span>Language:</span>
+                          <span className="font-medium text-foreground">{selectedVoice.lang}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Accent:</span>
+                          <span className="font-medium text-foreground">{selectedVoice.accent.toUpperCase()}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Gender:</span>
+                          <span className="font-medium text-foreground">{selectedVoice.gender}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Quality:</span>
+                          <span className="font-medium text-foreground capitalize">{selectedVoice.quality}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Provider:</span>
+                          <span className="font-medium text-foreground">{selectedVoice.provider}</span>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -401,7 +439,7 @@ export default function HomePage() {
                     onClick={() => speak("Hello, this is a test of the selected voice.")}
                     disabled={!selectedVoice || speechState === 'speaking'}
                     variant="outline"
-                    className="w-full"
+                    className="w-full rounded-xl hover:bg-primary/10 hover:border-primary transition-all"
                   >
                     Test Voice
                   </Button>
@@ -415,26 +453,26 @@ export default function HomePage() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 }}
             >
-              <Card>
+              <Card className="shadow-xl border-primary/10 hover:shadow-2xl transition-all duration-300">
                 <CardHeader>
-                  <CardTitle>Statistics</CardTitle>
+                  <CardTitle className="text-xl">Statistics</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center p-2 rounded-lg hover:bg-accent/30 transition-colors">
                     <span className="text-sm text-muted-foreground">Available Voices:</span>
-                    <span className="font-medium">{voices.length}</span>
+                    <span className="font-semibold text-lg text-primary">{voices.length}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center p-2 rounded-lg hover:bg-accent/30 transition-colors">
                     <span className="text-sm text-muted-foreground">Current Text Length:</span>
-                    <span className="font-medium">{charCount}</span>
+                    <span className="font-semibold text-lg">{charCount}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center p-2 rounded-lg hover:bg-accent/30 transition-colors">
                     <span className="text-sm text-muted-foreground">Word Count:</span>
-                    <span className="font-medium">{words.length}</span>
+                    <span className="font-semibold text-lg">{words.length}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center p-2 rounded-lg hover:bg-accent/30 transition-colors">
                     <span className="text-sm text-muted-foreground">Speech State:</span>
-                    <span className={`font-medium capitalize ${
+                    <span className={`font-semibold text-lg capitalize ${
                       speechState === 'speaking' ? 'text-green-500' :
                       speechState === 'paused' ? 'text-yellow-500' :
                       'text-muted-foreground'
@@ -452,15 +490,15 @@ export default function HomePage() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.5 }}
             >
-              <Card>
+              <Card className="shadow-xl border-primary/10 hover:shadow-2xl transition-all duration-300">
                 <CardHeader>
-                  <CardTitle>Quick Actions</CardTitle>
+                  <CardTitle className="text-xl">Quick Actions</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <Button
                     onClick={() => setText('')}
                     variant="outline"
-                    className="w-full justify-start"
+                    className="w-full justify-start rounded-xl hover:bg-primary/10 hover:border-primary transition-all"
                   >
                     <RotateCcw className="h-4 w-4 mr-2" />
                     Clear Text
@@ -468,7 +506,7 @@ export default function HomePage() {
                   <Button
                     onClick={() => updateSettings({ rate: 1.0, pitch: 1.0, volume: 1.0 })}
                     variant="outline"
-                    className="w-full justify-start"
+                    className="w-full justify-start rounded-xl hover:bg-primary/10 hover:border-primary transition-all"
                   >
                     <RotateCcw className="h-4 w-4 mr-2" />
                     Reset Settings

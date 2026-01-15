@@ -13,11 +13,11 @@ const Slider = React.forwardRef<HTMLInputElement, SliderProps>(
       <div className="space-y-2">
         {label && (
           <div className="flex justify-between items-center">
-            <label className="text-sm font-medium text-foreground">
+            <label className="text-sm font-semibold text-foreground">
               {label}
             </label>
             {showValue && (
-              <span className="text-sm text-muted-foreground">
+              <span className="text-sm font-medium text-primary px-2 py-0.5 rounded-full bg-primary/10">
                 {props.value}
                 {props.type === 'range' && props.max === '2' ? 'x' : ''}
               </span>
@@ -27,7 +27,7 @@ const Slider = React.forwardRef<HTMLInputElement, SliderProps>(
         <input
           type="range"
           className={cn(
-            'w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer slider',
+            'w-full h-2 bg-secondary rounded-full appearance-none cursor-pointer slider transition-all',
             className
           )}
           ref={ref}
